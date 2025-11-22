@@ -1,18 +1,15 @@
 import streamlit as st
 from anthropic import Anthropic
 
-# Page configuration
 st.set_page_config(
     page_title="dataPARC Expressions Assistant",
     page_icon="💬",
     layout="centered"
 )
 
-# Title
 st.title("💬 dataPARC Expressions Assistant")
 st.caption("Ask me anything about dataPARC expressions and functions")
 
-# Load knowledge base files - USING YOUR FILE NAMES
 @st.cache_data
 def load_knowledge():
     try:
@@ -31,7 +28,6 @@ def load_knowledge():
 
 expressions_rag, expressions_manual, function_list, system_prompt = load_knowledge()
 
-# Combine knowledge base
 knowledge_base = f"""
 EXPRESSIONS RAG:
 {expressions_rag}
@@ -43,34 +39,29 @@ FUNCTION LIST:
 {function_list}
 """
 
-# Initialize Claude
 try:
     client = Anthropic(api_key=st.secrets["CLAUDE_API_KEY"])
 except KeyError:
     st.error("⚠️ Claude API key not configured. Please add it in Streamlit secrets.")
     st.stop()
 
-# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Chat input
-if prompt := st.chat_input("Ask about dataPARC expressions..."):
-    # Add user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
+user_input = st.chat_input("Ask about dataPARC expressions...")
+
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_input)
     
-    # Get Claude response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                # Build message history
                 claude_messages = []
                 for msg in st.session_state.messages:
                     claude_messages.append({
@@ -78,7 +69,6 @@ if prompt := st.chat_input("Ask about dataPARC expressions..."):
                         "content": msg["content"]
                     })
                 
-                # Call Claude API with prompt caching
                 response = client.messages.create(
                     model="claude-sonnet-4-5-20250929",
                     max_tokens=2048,
@@ -104,7 +94,6 @@ if prompt := st.chat_input("Ask about dataPARC expressions..."):
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
-# Sidebar
 with st.sidebar:
     st.header("ℹ️ About")
     st.write("AI assistant for dataPARC expressions and functions")
@@ -112,4 +101,3 @@ with st.sidebar:
     if st.button("Clear Chat"):
         st.session_state.messages = []
         st.rerun()
-```
