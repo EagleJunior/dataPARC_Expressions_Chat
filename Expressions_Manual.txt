@@ -1,0 +1,247 @@
+============================================================
+Expanded dataPARC Expressions Manual (TXT for RAG)
+============================================================
+1. Overview
+
+Scripted tags allow mathematical expressions to be applied to one or more historian tags.
+They are used for unit conversions, derived values (e.g., mass = density × volume), smoothing, filtering, and combining multiple tags.
+
+Expressions can be entered:
+
+In Script Editor
+
+Directly in PARCview displays via the /EXPR= tag switch
+
+2. Input Tag Concept
+
+The Input Tag is the primary tag whose timestamps form the base event sequence.
+When an expression references additional tags:
+
+Output timestamps = union of all referenced tags’ timestamps.
+
+Interpolation obeys each tag’s own interpolation settings.
+
+3. Expression Syntax
+
+Expressions are written as:
+
+<FullTagName>/EXPR=<expression>
+
+3.1 Accessing tag values
+
+Input tag value:
+
+IV
+
+
+Additional tags:
+
+IV("Location.Source.TagName")
+
+3.2 Tag switches inside IV
+
+Tags referenced inside IV() may include tag switches, for example:
+
+IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600, 0, 0)")
+
+
+This is valid and fully supported.
+
+3.3 Nested expressions inside tag switches
+
+Tags inside IV("…") and other functions may themselves contain:
+
+/CALC= -> this will return an output of a formula from dataPARC library
+/EXPR= -> this will return an output of another expression
+
+If there are nested quotes, replce the inner quote with &quot; to avoid the syntax errors
+
+Example :
+
+VAN.Sample.1-Sine/EXPR=IV + IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600,0,0)")
+
+
+This means:
+
+The main tag uses an expression
+
+That expression reads another tag
+
+The referenced tag applies a LowPassFilter
+
+Then the filtered result is returned to the expression
+
+Nested evaluation is supported recursively.
+
+4. Supported Operators
++   addition  
+-   subtraction (also unary minus)  
+*   multiplication  
+/   division  
+mod remainder  
+()  grouping  
+
+5. Conditional Logic
+
+Use the VB-like format:
+
+IIF(condition, trueValue, falseValue)
+
+
+Example:
+
+IIF(IV > 5, 1, 0)
+
+
+Nested IIF is allowed.
+
+6. Math Functions (.NET Math Library)
+
+Advanced math requires using the Math. namespace.
+
+Examples:
+Math.Pow(IV, 2)
+Math.Sqrt(IV)
+Math.Sin(IV)
+Math.Log(IV)
+
+List of supported Math functions (complete):
+
+Abs
+Acos
+Asin
+Atan
+Atan2
+BigMul
+Ceiling
+Cos
+Cosh
+Exp
+Floor
+Log
+Log10
+Max
+Min
+Pow
+Round
+Sign
+Sin
+Sinh
+Sqrt
+Tan
+Tanh
+Truncate
+
+7. Multiple Input Tags
+
+Add tags using:
+
+IV("TagName")
+
+
+Dragging tags into Script Editor auto-inserts correct syntax.
+
+Timestamps become the combined union of all referenced tags.
+
+8. Expression Evaluation Behavior
+
+Evaluated at every timestamp present in any input tag
+
+Each referenced tag is interpolated to that timestamp
+
+Output is calculated for every timestamp in the union
+
+Order of operations follows VB rules
+
+9. Using Expressions in Trends
+
+Scripted tags behave like regular tags:
+
+Drag-and-drop into Trend
+
+Paste <TagName>/EXPR=<formula> directly
+
+Examples:
+
+Tag.PV/EXPR=(IV-32)*5/9
+VAN.Sample.1-Sine/EXPR=IV + Math.Sin(IV("Sine.Tag"))
+
+
+Only one tag switch can be applied.
+Remove /PLOT or others before adding /EXPR.
+
+10. Additional dataPARC Custom Functions (C. namespace)
+
+These functions extend the VB-like expression engine.
+
+Historian access
+C.ReadPVAtTime(tag, timestamp, searchback)
+C.ReadPVTotal(tag, start, end)
+C.IV(tag, timestamp)
+
+Digital state
+C.StateNo(value)
+
+Logic
+C.IIF(cond, a, b)
+C.InRange(value, min, max)
+
+Strings
+C.Concat(a, b, c, ...)
+C.Format(value, formatString)
+string(value)
+C.Left(str, n)
+
+Date/time
+C.DatePart_Second(timestamp)
+C.DatePart_Hour(timestamp)
+C.DatePart_Day(timestamp)
+...
+TimeSpan.Parse("hh:mm:ss")
+
+11. dataPARC Library Functions in Tag Switches
+
+dataPARC tags may apply special processing via /CALC= or /FILTER=.
+
+Examples:
+
+LowPassFilter
+
+HighPassFilter
+
+RunningAverage
+
+Derivative
+
+Custom filters (mill-specific)
+
+Example usage:
+
+IV("Area.Flow1/CALC=LowPassFilter(600, 0, 0)")
+
+
+These functions execute before the expression reads the tag.
+
+12. Nested Expressions & Recursion
+
+Expressions can nest indefinitely:
+
+TagA/EXPR=
+    IV +
+    IV("TagB/CALC=LowPassFilter(300,0,0)") +
+    IV("TagC/EXPR=IV*2")
+
+
+Features:
+
+A tag inside IV("…") may itself contain an EXPR
+
+A tag may reference one with /CALC
+
+Filters and expressions stack recursively
+
+Time alignment is handled automatically
+
+============================================================
+End of Extended Manual (TXT for RAG)
+============================================================

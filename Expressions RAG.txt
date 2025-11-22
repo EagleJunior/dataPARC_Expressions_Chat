@@ -1,0 +1,417 @@
+============================================================
+dataPARC Expression Manual (TXT Version)
+============================================================
+------------------------------------------------------------
+1. Overview
+------------------------------------------------------------
+
+dataPARC expressions are used in PARCview displays, trends, dashboards, and calculated tags.
+The language is composed of:
+
+A VB-style expression engine
+
+Operators and syntax similar to VB / Excel
+
+Supports numeric, boolean, and string expressions
+
+A set of dataPARC custom functions in the C. namespace
+
+Provides historian data access
+
+Timestamp manipulation
+
+Digital state decoding
+
+String formatting
+
+Utility calculations
+
+The combination gives a powerful calculation environment for real-time and historical data.
+
+------------------------------------------------------------
+2. Syntax Basics
+------------------------------------------------------------
+2.1 Expressions
+
+Expressions are written after the /EXPR= switch:
+
+TagName/EXPR=<expression>
+
+2.2 Base Tag
+
+A tag is identified as:
+
+Location.Source.TagName
+
+
+Example:
+
+VAN.PHD.02FC6125.PV
+
+2.3 Operators
+
+Supported operators:
+
+Arithmetic: +, -, *, /, mod
+
+Comparison: =, <>, <, >, <=, >=
+
+Boolean: AND, OR, NOT
+
+Grouping: ( )
+
+Unary negative: -value
+
+2.4 Data Types
+
+Numeric (integer, float)
+
+String
+
+Boolean
+
+Datetime (timestamps)
+
+2.5 Timestamps
+
+Two main timestamp sources:
+
+IV.Timestamp – timestamp of the base tag
+
+explicit timestamps (passed to C.ReadPVAtTime or C.IV)
+
+------------------------------------------------------------
+3. Tag Value Access Functions
+------------------------------------------------------------
+3.1 IV
+
+Returns the value of the base tag.
+
+Signature
+
+IV
+
+
+Return: value of the tag at the current timestamp.
+
+3.2 IV("TagName")
+
+Returns the value of another tag at the current timestamp.
+
+Signature
+
+IV(tagName)
+
+
+Arguments
+
+tagName (string): fully qualified tag name
+
+Return: value of the referenced tag.
+
+3.3 C.IV("TagName", timestamp)
+
+Explicit-time version of IV().
+
+Signature
+
+C.IV(tagName, timestamp)
+
+
+Arguments
+
+tagName: string
+
+timestamp: datetime
+
+Return: value at specified timestamp.
+
+3.4 C.ReadPVAtTime("TagName", timestamp)
+
+Reads a value from a tag at an arbitrary timestamp.
+
+Signature
+
+C.ReadPVAtTime(tag, timestamp)
+
+
+Arguments
+
+tag: string, fully qualified tag
+
+timestamp: datetime
+
+Return: numeric or string (same type as tag)
+
+3.5 C.ReadPVTotal("TagName", startTime, endTime)
+
+Returns totalized (integrated) value over a period.
+
+Signature
+
+C.ReadPVTotal(tagName, startTime, endTime)
+
+
+Arguments
+
+tagName: string
+
+startTime: datetime
+
+endTime: datetime
+
+Return: numeric total
+
+------------------------------------------------------------
+4. Date & Time Functions (C.)
+------------------------------------------------------------
+
+All accept a datetime argument.
+
+4.1 C.DatePart_Second(timestamp)
+
+Returns integer seconds (0–59).
+
+4.2 C.DatePart_Minute(timestamp)
+
+Returns integer minutes (0–59).
+
+4.3 C.DatePart_Hour(timestamp)
+
+Returns integer hours (0–23).
+
+4.4 C.DatePart_Day(timestamp)
+
+Returns day of month (1–31).
+
+4.5 C.DatePart_Month(timestamp)
+
+Returns month (1–12).
+
+4.6 C.DatePart_Weekday(timestamp)
+
+Returns weekday number.
+
+4.7 C.DatePart_Year(timestamp)
+
+Returns year (4-digit integer).
+
+4.8 TimeSpan.Parse("hh:mm:ss")
+
+A .NET time-parsing function supported by the engine.
+
+Returns a TimeSpan object.
+
+------------------------------------------------------------
+5. Logical & Conditional Functions
+------------------------------------------------------------
+5.1 C.IIF(condition, trueValue, falseValue)
+
+Conditional function.
+
+Signature
+
+C.IIF(cond, valTrue, valFalse)
+
+5.2 C.InRange(value, min, max)
+
+Checks if a value is within a numeric range.
+
+Signature
+
+C.InRange(value, min, max)
+
+
+Return: boolean (1 or 0)
+
+5.3 C.StateNo(value)
+
+Returns the state index of a digital/enumerated tag.
+
+Signature
+
+C.StateNo(value)
+
+
+Return: integer representing the digital tag’s state.
+
+------------------------------------------------------------
+6. String Functions
+------------------------------------------------------------
+6.1 C.Concat(a, b, c, ...)
+
+Concatenates values into a single string.
+
+Return: string
+
+6.2 C.Format(value, formatString)
+
+Formats a numeric value using printf-style formatting.
+
+Signature
+
+C.Format(value, format)
+
+
+Return: string
+
+6.3 string(value)
+
+Converts a value to a string.
+
+6.4 C.Left(stringValue, count)
+
+Extracts the first N characters.
+
+Signature
+
+C.Left(str, n)
+
+------------------------------------------------------------
+7. Numeric Functions
+------------------------------------------------------------
+7.1 C.Int(value)
+
+Converts to integer, truncating decimals.
+
+7.2 Arithmetic Patterns
+
+Expressions fully support:
+
+weighted averages
+
+sums of multiple tag values
+
+negative values
+
+scaling (e.g., value * 24)
+
+complex nested arithmetic
+
+Examples:
+
+(value1 + value2 + value3) / 3
+(-C.ReadPVAtTime(...) * 2.5)
+(valueA * 2 + valueB) / (2 + 1)
+
+------------------------------------------------------------
+8. Timestamp Alignment Rules
+------------------------------------------------------------
+8.1 Union of timestamps
+
+When an expression references multiple tags:
+
+Output timestamps = all timestamps from all input tags combined.
+
+8.2 Interpolation
+
+If a tag has no value at a timestamp:
+
+dataPARC interpolates based on tag configuration
+(linear or step interpolation)
+
+8.3 No need for manual alignment
+
+dataPARC aligns all tag values automatically.
+
+------------------------------------------------------------
+9. Typical Expression Patterns
+------------------------------------------------------------
+9.1 Digital Mode Logic
+C.IIF(C.StateNo(C.ReadPVAtTime("TagA", IV.Timestamp)) = 1, 2,
+C.IIF(C.StateNo(C.ReadPVAtTime("TagB", IV.Timestamp)) = 1, 1, 0))
+
+9.2 Weighted Averages
+(C.ReadPVAtTime("A", t) + C.ReadPVAtTime("B", t) + C.ReadPVAtTime("C", t)) / 3
+
+9.3 Totalizer with formatting
+C.Concat("Flow = ",
+    C.Format(
+        C.ReadPVTotal("FI101", IV.Timestamp - TimeSpan.Parse("08:00:00"), IV.Timestamp) * 24,
+        "%0.1f m³"))
+
+9.4 Blink logic
+C.IIF(C.DatePart_Second(IV.Timestamp) mod 2 = 0, 0, 1)
+
+9.5 Tag plus cross-tag addition
+IV + IV("Other.Tag")
+
+------------------------------------------------------------
+10. Summary of All dataPARC Custom Functions
+------------------------------------------------------------
+
+Historian Access:
+
+C.ReadPVAtTime()
+
+C.ReadPVTotal()
+
+C.IV()
+
+Digital/State Handling:
+
+C.StateNo()
+
+Boolean/Conditional:
+
+C.IIF()
+
+C.InRange()
+
+Date/Time:
+
+C.DatePart_Second()
+
+C.DatePart_Minute()
+
+C.DatePart_Hour()
+
+C.DatePart_Day()
+
+C.DatePart_Month()
+
+C.DatePart_Weekday()
+
+C.DatePart_Year()
+
+TimeSpan.Parse()
+
+String:
+
+C.Concat()
+
+C.Format()
+
+C.Left()
+
+string()
+
+Numeric:
+
+C.Int()
+
+------------------------------------------------------------
+11. Integration Notes for Converter Developers
+------------------------------------------------------------
+
+The language is fundamentally VB-like.
+
+All custom historian functionality is in C. namespace.
+
+PI Vision equivalents:
+
+format() → C.Format()
+
+tagtot() → C.ReadPVTotal()
+
+stateno() → C.StateNo()
+
+Time offsets require TimeSpan.Parse().
+
+All tags must be fully qualified in dataPARC.
+
+Expressions can nest indefinitely.
+
+Timestamp alignment happens automatically.
+
+END OF MANUAL (TXT VERSION)

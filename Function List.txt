@@ -1,0 +1,119 @@
+# Function Name: Conditions_RemoveSignals_Longer_Shorter_Than
+
+Example: VAN.IP21.291FT6126/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 10)
+
+    ' Script Purpose: This script processes an input 0/1 signal and filters out signals
+    '                 based on their duration. It outputs 1 when the signal starts and
+    '                 0 when the signal ends, based on a specified duration threshold.
+    '
+    ' Input Arguments:
+    ' - durationType (String): Determines whether to filter signals "ShorterThan" or "LongerThan"
+    '                           the given duration threshold.
+    ' - duration (Double): The duration threshold in minutes. Signals that do not meet the 
+    '                      specified duration criteria will be filtered out.
+    '
+    ' What the Script Does:
+    ' - Reads a 0/1 signal from an input tag.
+    ' - For each signal (from 1 to 0), calculates its duration in minutes.
+    ' - Depending on the "durationType" argument, it filters out signals that are shorter 
+    '   or longer than the specified duration threshold.
+    ' - Outputs a 1 when the signal starts (becomes 1) and a 0 when the signal ends (becomes 0),
+    '   but only for signals that pass the duration filter.
+
+________________________________________________________________
+	
+# Function Name: LowHighPassFilter
+
+Example: VAN.IP21.291FT6126/CALC=LowHighPassFilter("LowPass", 600, 0, 0)
+
+    ' Script Purpose: This script implements high-quality FIR filters using the windowed-sinc method.
+	'
+	' FILTER TYPES:
+	' - LOW PASS: Removes high-frequency noise, keeps slow trends
+	' - HIGH PASS: Removes slow drifts, keeps fast variations
+	'
+	' INPUT ARGUMENTS:
+	' - FilterType (String): Required. "LowPass" or "HighPass"
+	'     LowPass: Smooths signal, removes oscillations faster than CutoffPeriod
+	'     HighPass: Removes slow trends, keeps oscillations faster than CutoffPeriod
+	'
+	' - CutoffPeriod (Double): Required. The cutoff time period in SECONDS.
+	'     Example: 600 = 10 minutes, 3600 = 1 hour
+	'
+	' - FilterOrder (Double): Number of filter coefficients.
+	'     Default: 0 (auto-calculated as 4× cutoff period in samples)
+	'
+	' - SamplingInterval (Double): Output sampling time step in SECONDS.
+	'     Default: 0 (auto-calculated from input data density)
+
+________________________________________________________________
+
+Function Name: Conditions_Event_Around_Start_End
+
+Example:
+VAN.IP21.SomeSignal/CALC = Conditions_Event_Around_Start_End("Around_Start", 5, 10)
+or
+VAN.IP21.SomeSignal/CALC = Conditions_Event_Around_Start_End("Around_End", 15, 5)
+
+	Script Purpose
+
+	This script processes a binary 0/1 signal and creates new artificial events around either the start or end of each real signal event.
+	The output consists of a 1 at the beginning of the generated event window and a 0 at its end, shifted by user-defined offsets.
+
+	Input Arguments
+
+		Around_Type (String)
+			Determines whether to generate the artificial event around the start or around the end of each real signal.
+			Accepted values:
+			"Around_Start"
+			"Around_End"
+
+		Before_event (Double)
+			Number of minutes before the real event time (start or end) where the artificial event should begin.
+
+		After_event (Double)
+			Number of minutes after the real event time (start or end) where the artificial event should end.
+
+	What the Script Does
+
+		Reads the raw 0/1 signal from the input tag across the calculation period.
+		Detects each signal event:
+		Start = transition from 0 → 1
+		End = transition from 1 → 0
+		For each completed real event:
+		If Around_Type = "Around_Start":
+		Creates a new event starting Before_event minutes before the real signal start.
+		Ends the event After_event minutes after the real signal start.
+		If Around_Type = "Around_End":
+		Creates a new event starting Before_event minutes before the real signal end.
+		Ends the event After_event minutes after the real signal end.
+		Writes two output points for each generated artificial event:
+			1 at the adjusted event start time
+			0 at the adjusted event end time
+		Does not stretch or modify the original signal—only generates new, shifted event windows.
+		
+________________________________________________________________
+
+Function Name: Conditions_RemoveSignals_Longer_Shorter_Than
+
+Example: VAN.IP21.291FT6126/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 5)
+
+	'Script Purpose: This script processes an input 0/1 signal and filters out signals
+    '                 based on their duration. It outputs 1 when the signal starts and
+    '                 0 when the signal ends, based on a specified duration threshold.
+    '
+    ' Input Arguments:
+    ' - durationType (String): Determines whether to filter signals "ShorterThan" or "LongerThan"
+    '                           the given duration threshold.
+    ' - duration (Double): The duration threshold in minutes. Signals that do not meet the 
+    '                      specified duration criteria will be filtered out.
+    '
+    ' What the Script Does:
+    ' - Reads a 0/1 signal from an input tag.
+    ' - For each signal (from 1 to 0), calculates its duration in minutes.
+    ' - Depending on the "durationType" argument, it filters out signals that are shorter 
+    '   or longer than the specified duration threshold.
+    ' - Outputs a 1 when the signal starts (becomes 1) and a 0 when the signal ends (becomes 0),
+    '   but only for signals that pass the duration filter.
+    ' ------------------------------------------------------------------------------
+		
