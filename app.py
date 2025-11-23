@@ -3,7 +3,7 @@ from anthropic import Anthropic
 
 st.set_page_config(
     page_title="dataPARC Expressions Assistant",
-    page_icon="dataparc-logo.png",
+    page_icon="dataparc_rebrand_black.png",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
@@ -115,7 +115,7 @@ st.markdown('<div class="header-container">', unsafe_allow_html=True)
 # Branded header with logo
 col1, col2 = st.columns([1, 4])
 with col1:
-    st.image("dataparc-logo.png", width=120)
+    st.image("dataparc_rebrand_black.png", width=120)
 with col2:
     st.markdown("""
         <div style='padding-top: 10px;'>
@@ -224,63 +224,4 @@ if user_input:
                             "cache_control": {"type": "ephemeral"}
                         },
                         {
-                            "type": "text",
-                            "text": knowledge_base,
-                            "cache_control": {"type": "ephemeral"}
-                        }
-                    ],
-                    messages=claude_messages
-                )
-                
-                answer = response.content[0].text
-                st.markdown(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer})
-                
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-
-# Branded sidebar
-with st.sidebar:
-    # Logo in sidebar too
-    st.image("dataparc-logo.png", width=150)
-    st.markdown("---")
-    
-    st.markdown("### ℹ️ About")
-    st.markdown("""
-    This AI assistant helps dataPARC users with:
-    - Expression syntax
-    - Function documentation
-    - Troubleshooting
-    - Best practices
-    """)
-    
-    st.markdown("---")
-    
-    if st.button("🔄 Clear Chat History"):
-        st.session_state.messages = []
-        st.session_state.welcomed = False
-        st.rerun()
-    
-    st.markdown("---")
-    
-    st.markdown("""
-    <div style='text-align: center; padding: 20px 0;'>
-        <p style='color: rgba(255,255,255,0.6); font-size: 12px; margin: 0;'>
-            🔒 Secure & Private
-        </p>
-        <p style='color: rgba(255,255,255,0.6); font-size: 12px; margin: 5px 0 0 0;'>
-            Powered by Claude AI
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Footer
-st.markdown("---")
-st.markdown("""
-    <div style='text-align: center; color: #666; font-size: 13px; padding: 10px 0;'>
-        <p style='margin: 0;'>
-            💡 <strong>Need more help?</strong> Contact 
-            <a href='https://www.dataparc.com/support' target='_blank' style='color: #5DD9D1;'>dataPARC Support</a>
-        </p>
-    </div>
-""", unsafe_allow_html=True)
+                            "type": "te
