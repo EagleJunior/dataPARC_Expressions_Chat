@@ -1,0 +1,1004 @@
+============================================================
+dataPARC Expressions - Complete Reference Manual
+============================================================
+
+VERSION: Comprehensive Edition (Merged)
+PURPOSE: Complete reference for dataPARC expression syntax, functions, and patterns
+
+============================================================
+TABLE OF CONTENTS
+============================================================
+
+1. Overview
+2. Syntax Basics
+3. Tag Value Access Functions
+4. Date & Time Functions
+5. Logical & Conditional Functions
+6. String Functions
+7. Numeric Functions
+8. Math Functions (.NET Math Library)
+9. Nested Expressions & Tag Switches
+10. Timestamp Alignment Rules
+11. Expression Patterns & Examples
+12. Script Editor Usage
+13. Complete Function Reference
+14. Integration Notes
+
+============================================================
+1. OVERVIEW
+============================================================
+
+dataPARC expressions are used in:
+- PARCview displays
+- Trends
+- Dashboards
+- Calculated tags (scripted tags)
+- Direct tag queries with /EXPR= switch
+
+PURPOSE:
+Expressions allow mathematical operations, unit conversions, derived values (e.g., mass = density × volume), smoothing, filtering, and combining multiple tags.
+
+LANGUAGE FEATURES:
+- VB-style expression engine
+- Operators and syntax similar to VB / Excel
+- Supports numeric, boolean, and string expressions
+- Custom dataPARC functions in C. namespace for:
+  * Historian data access
+  * Timestamp manipulation
+  * Digital state decoding
+  * String formatting
+  * Utility calculations
+- Full .NET Math library support
+
+============================================================
+2. SYNTAX BASICS
+============================================================
+
+2.1 Expression Format
+------------------------------------------------------------
+Expressions are written after the /EXPR= switch:
+
+TagName/EXPR=<expression>
+
+Example:
+VAN.PHD.02FC6125.PV/EXPR=IV*2+10
+
+
+2.2 Base Tag (Input Tag)
+------------------------------------------------------------
+A tag is identified as:
+
+Location.Source.TagName
+
+Example:
+VAN.PHD.02FC6125.PV
+
+The Input Tag is the primary tag whose timestamps form the base event sequence.
+
+
+2.3 Operators
+------------------------------------------------------------
+Supported operators:
+
+ARITHMETIC:
++   addition
+-   subtraction (also unary minus)
+*   multiplication
+/   division
+mod remainder
+
+COMPARISON:
+=   equal
+<>  not equal
+<   less than
+>   greater than
+<=  less than or equal
+>=  greater than or equal
+
+BOOLEAN:
+AND logical and
+OR  logical or
+NOT logical not
+
+GROUPING:
+()  parentheses for grouping
+
+UNARY:
+-value  negative value
+
+
+2.4 Data Types
+------------------------------------------------------------
+- Numeric (integer, float)
+- String
+- Boolean (1 = true, 0 = false)
+- Datetime (timestamps)
+
+
+2.5 Timestamps
+------------------------------------------------------------
+Two main timestamp sources:
+
+1. IV.Timestamp
+   The timestamp of the base tag
+
+2. Explicit timestamps
+   Passed to functions like C.ReadPVAtTime() or C.IV()
+
+
+2.6 Order of Operations
+------------------------------------------------------------
+Follows standard VB rules:
+1. Parentheses
+2. Unary operators (-, NOT)
+3. Multiplication, Division
+4. Addition, Subtraction
+5. Comparison operators
+6. Boolean operators (AND, OR)
+
+============================================================
+3. TAG VALUE ACCESS FUNCTIONS
+============================================================
+
+3.1 IV
+------------------------------------------------------------
+Returns the value of the base tag at the current timestamp.
+
+SIGNATURE:
+IV
+
+ARGUMENTS:
+None
+
+RETURN:
+Value of the base tag
+
+EXAMPLE:
+VAN.PHD.Tag1/EXPR=IV*2
+
+
+3.2 IV("TagName")
+------------------------------------------------------------
+Returns the value of another tag at the current timestamp.
+
+SIGNATURE:
+IV(tagName)
+
+ARGUMENTS:
+tagName (string): fully qualified tag name
+
+RETURN:
+Value of the referenced tag
+
+EXAMPLE:
+VAN.PHD.Tag1/EXPR=IV + IV("VAN.PHD.Tag2")
+
+IMPORTANT:
+Tags referenced inside IV() may include tag switches:
+IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600, 0, 0)")
+
+
+3.3 C.IV("TagName", timestamp)
+------------------------------------------------------------
+Explicit-time version of IV() - reads tag value at specific timestamp.
+
+SIGNATURE:
+C.IV(tagName, timestamp)
+
+ARGUMENTS:
+tagName (string): fully qualified tag name
+timestamp (datetime): specific time to read
+
+RETURN:
+Value at specified timestamp
+
+EXAMPLE:
+C.IV("VAN.PHD.Flow1", IV.Timestamp - TimeSpan.Parse("01:00:00"))
+
+
+3.4 C.ReadPVAtTime("TagName", timestamp)
+------------------------------------------------------------
+Reads a value from a tag at an arbitrary timestamp.
+
+SIGNATURE:
+C.ReadPVAtTime(tag, timestamp)
+
+ARGUMENTS:
+tag (string): fully qualified tag name
+timestamp (datetime): time to read value
+
+RETURN:
+Numeric or string (same type as tag)
+
+EXAMPLE:
+C.ReadPVAtTime("VAN.PHD.Temp1", IV.Timestamp)
+
+NOTE:
+This is the most common function for reading values at specific times.
+
+
+3.5 C.ReadPVAtTime with Searchback
+------------------------------------------------------------
+Extended version with searchback parameter.
+
+SIGNATURE:
+C.ReadPVAtTime(tag, timestamp, searchback)
+
+ARGUMENTS:
+tag (string): fully qualified tag name
+timestamp (datetime): target time
+searchback (timespan): how far back to search for value
+
+EXAMPLE:
+C.ReadPVAtTime("VAN.PHD.Flow", IV.Timestamp, TimeSpan.Parse("00:10:00"))
+
+
+3.6 C.ReadPVTotal("TagName", startTime, endTime)
+------------------------------------------------------------
+Returns totalized (integrated) value over a period.
+Used for flow totals, energy calculations, etc.
+
+SIGNATURE:
+C.ReadPVTotal(tagName, startTime, endTime)
+
+ARGUMENTS:
+tagName (string): fully qualified tag name
+startTime (datetime): period start
+endTime (datetime): period end
+
+RETURN:
+Numeric total (integrated value)
+
+EXAMPLE:
+C.ReadPVTotal("VAN.PHD.Flow1", IV.Timestamp - TimeSpan.Parse("08:00:00"), IV.Timestamp)
+
+COMMON PATTERN (daily total):
+C.ReadPVTotal("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp) * 24
+
+============================================================
+4. DATE & TIME FUNCTIONS
+============================================================
+
+All date/time functions accept a datetime argument.
+Commonly used with IV.Timestamp.
+
+4.1 C.DatePart_Second(timestamp)
+------------------------------------------------------------
+Returns integer seconds (0-59).
+
+EXAMPLE:
+C.DatePart_Second(IV.Timestamp)
+
+
+4.2 C.DatePart_Minute(timestamp)
+------------------------------------------------------------
+Returns integer minutes (0-59).
+
+EXAMPLE:
+C.DatePart_Minute(IV.Timestamp)
+
+
+4.3 C.DatePart_Hour(timestamp)
+------------------------------------------------------------
+Returns integer hours (0-23).
+
+EXAMPLE:
+C.DatePart_Hour(IV.Timestamp)
+
+
+4.4 C.DatePart_Day(timestamp)
+------------------------------------------------------------
+Returns day of month (1-31).
+
+EXAMPLE:
+C.DatePart_Day(IV.Timestamp)
+
+
+4.5 C.DatePart_Month(timestamp)
+------------------------------------------------------------
+Returns month (1-12).
+
+EXAMPLE:
+C.DatePart_Month(IV.Timestamp)
+
+
+4.6 C.DatePart_Weekday(timestamp)
+------------------------------------------------------------
+Returns weekday number.
+
+EXAMPLE:
+C.DatePart_Weekday(IV.Timestamp)
+
+
+4.7 C.DatePart_Year(timestamp)
+------------------------------------------------------------
+Returns year (4-digit integer).
+
+EXAMPLE:
+C.DatePart_Year(IV.Timestamp)
+
+
+4.8 TimeSpan.Parse("hh:mm:ss")
+------------------------------------------------------------
+A .NET time-parsing function supported by the engine.
+Returns a TimeSpan object for time calculations.
+
+SIGNATURE:
+TimeSpan.Parse(timeString)
+
+ARGUMENTS:
+timeString (string): format "hh:mm:ss" or "dd.hh:mm:ss"
+
+RETURN:
+TimeSpan object
+
+EXAMPLES:
+TimeSpan.Parse("01:00:00")     - 1 hour
+TimeSpan.Parse("08:30:00")     - 8 hours 30 minutes
+TimeSpan.Parse("1.00:00:00")   - 1 day
+
+COMMON USAGE:
+IV.Timestamp - TimeSpan.Parse("24:00:00")  // 24 hours ago
+
+============================================================
+5. LOGICAL & CONDITIONAL FUNCTIONS
+============================================================
+
+5.1 C.IIF(condition, trueValue, falseValue)
+------------------------------------------------------------
+Conditional function (if-then-else).
+
+SIGNATURE:
+C.IIF(condition, valueIfTrue, valueIfFalse)
+
+ARGUMENTS:
+condition (boolean): expression that evaluates to true/false
+valueIfTrue: returned if condition is true
+valueIfFalse: returned if condition is false
+
+RETURN:
+Either valueIfTrue or valueIfFalse
+
+EXAMPLES:
+C.IIF(IV > 100, 1, 0)
+C.IIF(IV > 5, "High", "Low")
+
+NESTED IIF:
+C.IIF(IV > 100, "High", C.IIF(IV > 50, "Medium", "Low"))
+
+ALTERNATIVE VB SYNTAX:
+IIF(IV > 5, 1, 0)
+Both C.IIF and IIF are supported.
+
+
+5.2 C.InRange(value, min, max)
+------------------------------------------------------------
+Checks if a value is within a numeric range (inclusive).
+
+SIGNATURE:
+C.InRange(value, minimum, maximum)
+
+ARGUMENTS:
+value (numeric): value to check
+minimum (numeric): lower bound
+maximum (numeric): upper bound
+
+RETURN:
+Boolean (1 if in range, 0 if not)
+
+EXAMPLE:
+C.InRange(IV, 20, 80)
+
+
+5.3 C.StateNo(value)
+------------------------------------------------------------
+Returns the state index of a digital/enumerated tag.
+Used for tags with discrete states (On/Off, Running/Stopped, etc.)
+
+SIGNATURE:
+C.StateNo(value)
+
+ARGUMENTS:
+value: digital tag value or state
+
+RETURN:
+Integer representing the digital tag's state number
+
+EXAMPLE:
+C.StateNo(IV("VAN.PHD.PumpStatus"))
+
+COMMON PATTERN (mode logic):
+C.IIF(C.StateNo(C.ReadPVAtTime("Mode.Tag", IV.Timestamp)) = 1, "Mode1", "Mode2")
+
+============================================================
+6. STRING FUNCTIONS
+============================================================
+
+6.1 C.Concat(a, b, c, ...)
+------------------------------------------------------------
+Concatenates multiple values into a single string.
+Accepts any number of arguments.
+
+SIGNATURE:
+C.Concat(value1, value2, value3, ...)
+
+ARGUMENTS:
+Multiple values (numeric, string, etc.)
+
+RETURN:
+String (concatenated result)
+
+EXAMPLE:
+C.Concat("Temperature: ", IV, " °C")
+C.Concat("Flow = ", C.Format(IV, "%0.2f"), " m³/h")
+
+
+6.2 C.Format(value, formatString)
+------------------------------------------------------------
+Formats a numeric value using printf-style formatting.
+
+SIGNATURE:
+C.Format(value, formatString)
+
+ARGUMENTS:
+value (numeric): value to format
+formatString (string): printf-style format
+
+RETURN:
+Formatted string
+
+FORMAT CODES:
+%d    - integer
+%f    - float
+%0.1f - float with 1 decimal place
+%0.2f - float with 2 decimal places
+%e    - scientific notation
+
+EXAMPLES:
+C.Format(IV, "%0.2f")           - "123.45"
+C.Format(IV, "%0.1f")           - "123.5"
+C.Format(1234.5678, "%0.0f")    - "1235"
+
+
+6.3 string(value)
+------------------------------------------------------------
+Converts a value to a string.
+
+SIGNATURE:
+string(value)
+
+ARGUMENTS:
+value: any type
+
+RETURN:
+String representation
+
+EXAMPLE:
+string(IV)
+
+
+6.4 C.Left(stringValue, count)
+------------------------------------------------------------
+Extracts the first N characters from a string.
+
+SIGNATURE:
+C.Left(str, n)
+
+ARGUMENTS:
+str (string): source string
+n (integer): number of characters
+
+RETURN:
+String (first n characters)
+
+EXAMPLE:
+C.Left("HelloWorld", 5)  // Returns "Hello"
+
+============================================================
+7. NUMERIC FUNCTIONS
+============================================================
+
+7.1 C.Int(value)
+------------------------------------------------------------
+Converts to integer, truncating decimals (no rounding).
+
+SIGNATURE:
+C.Int(value)
+
+ARGUMENTS:
+value (numeric): value to convert
+
+RETURN:
+Integer
+
+EXAMPLE:
+C.Int(123.789)  // Returns 123
+
+
+7.2 Arithmetic Patterns
+------------------------------------------------------------
+Expressions fully support:
+- Weighted averages
+- Sums of multiple tag values
+- Negative values
+- Scaling (e.g., value * 24)
+- Complex nested arithmetic
+
+EXAMPLES:
+(value1 + value2 + value3) / 3
+(-C.ReadPVAtTime("Tag1", IV.Timestamp) * 2.5)
+(valueA * 2 + valueB) / (2 + 1)
+IV * 1.8 + 32  // Celsius to Fahrenheit
+
+============================================================
+8. MATH FUNCTIONS (.NET MATH LIBRARY)
+============================================================
+
+Advanced mathematical operations require the Math. namespace.
+Full .NET Math library is supported.
+
+8.1 Complete List of Math Functions
+------------------------------------------------------------
+
+BASIC:
+Math.Abs(x)         - Absolute value
+Math.Sign(x)        - Sign of number (-1, 0, 1)
+Math.Max(a, b)      - Maximum of two values
+Math.Min(a, b)      - Minimum of two values
+
+ROUNDING:
+Math.Round(x)       - Round to nearest integer
+Math.Ceiling(x)     - Round up to integer
+Math.Floor(x)       - Round down to integer
+Math.Truncate(x)    - Remove decimals (like C.Int)
+
+POWER & ROOTS:
+Math.Pow(x, y)      - x raised to power y
+Math.Sqrt(x)        - Square root
+Math.Exp(x)         - e raised to power x
+
+LOGARITHMS:
+Math.Log(x)         - Natural logarithm (base e)
+Math.Log10(x)       - Logarithm base 10
+
+TRIGONOMETRIC:
+Math.Sin(x)         - Sine (x in radians)
+Math.Cos(x)         - Cosine (x in radians)
+Math.Tan(x)         - Tangent (x in radians)
+Math.Asin(x)        - Arcsine
+Math.Acos(x)        - Arccosine
+Math.Atan(x)        - Arctangent
+Math.Atan2(y, x)    - Arctangent of y/x
+
+HYPERBOLIC:
+Math.Sinh(x)        - Hyperbolic sine
+Math.Cosh(x)        - Hyperbolic cosine
+Math.Tanh(x)        - Hyperbolic tangent
+
+SPECIAL:
+Math.BigMul(a, b)   - Multiply two 32-bit integers -> 64-bit result
+
+
+8.2 Math Function Examples
+------------------------------------------------------------
+
+POWER CALCULATIONS:
+Math.Pow(IV, 2)                    // Square
+Math.Pow(IV, 0.5)                  // Square root (alternative)
+Math.Pow(10, IV)                   // 10 to the power of IV
+
+TRIGONOMETRY:
+Math.Sin(IV * Math.PI / 180)       // Sine (degrees to radians)
+Math.Cos(IV)                       // Cosine (IV in radians)
+
+ROUNDING:
+Math.Round(IV, 2)                  // Round to 2 decimal places
+Math.Ceiling(IV / 10) * 10         // Round up to nearest 10
+
+LOGARITHMS:
+Math.Log10(IV)                     // Log base 10
+Math.Log(IV) / Math.Log(2)         // Log base 2
+
+COMPLEX FORMULAS:
+Math.Sqrt(Math.Pow(IV, 2) + Math.Pow(IV("Tag2"), 2))  // Pythagorean
+
+============================================================
+9. NESTED EXPRESSIONS & TAG SWITCHES
+============================================================
+
+9.1 Tag Switches Overview
+------------------------------------------------------------
+dataPARC tags support multiple switches:
+
+/EXPR=     Expression calculation
+/CALC=     dataPARC library function
+/FILTER=   Special filtering
+/PLOT=     Display options
+
+IMPORTANT:
+Only ONE switch can be applied at a time.
+Remove /PLOT or other switches before adding /EXPR.
+
+
+9.2 Nested Expressions
+------------------------------------------------------------
+Expressions can nest indefinitely.
+Tags referenced inside IV("...") may themselves contain:
+
+- /EXPR= (another expression)
+- /CALC= (dataPARC library function)
+- /FILTER= (filter operations)
+
+EXAMPLE:
+VAN.Sample.1-Sine/EXPR=IV + IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600,0,0)")
+
+This means:
+1. Main tag uses an expression
+2. Expression reads another tag
+3. Referenced tag applies LowPassFilter
+4. Filtered result is returned to expression
+
+
+9.3 dataPARC Library Functions (/CALC=)
+------------------------------------------------------------
+Common library functions used in tag switches:
+
+FILTERS:
+LowPassFilter(timeConstant, min, max)
+HighPassFilter(...)
+RunningAverage(...)
+
+DERIVATIVES:
+Derivative(...)
+
+CUSTOM:
+Mill-specific custom functions
+
+EXAMPLE:
+IV("Area.Flow1/CALC=LowPassFilter(600, 0, 0)")
+
+
+9.4 Quote Escaping in Nested Expressions
+------------------------------------------------------------
+When nesting expressions with quotes inside quotes, use &quot; for inner quotes.
+
+PROBLEM:
+IV("Tag/EXPR=IV("OtherTag")")  // Syntax error!
+
+SOLUTION:
+IV("Tag/EXPR=IV(&quot;OtherTag&quot;)")
+
+EXAMPLE:
+VAN.Tag1/EXPR=IV + IV("VAN.Tag2/EXPR=IV * IV(&quot;VAN.Tag3&quot;)")
+
+
+9.5 Recursive Evaluation
+------------------------------------------------------------
+Nested evaluation is supported recursively:
+
+Level 1: TagA/EXPR=IV + IV("TagB/CALC=Filter(...)")
+Level 2: TagB uses /CALC which processes its data
+Level 3: TagB might reference TagC/EXPR=...
+
+Features:
+- Unlimited nesting depth
+- Filters and expressions stack
+- Time alignment handled automatically
+- Each level evaluates independently
+
+============================================================
+10. TIMESTAMP ALIGNMENT RULES
+============================================================
+
+10.1 Union of Timestamps
+------------------------------------------------------------
+When an expression references multiple tags:
+
+OUTPUT TIMESTAMPS = union of all input tag timestamps
+
+EXAMPLE:
+Tag1 has timestamps: 10:00, 10:05, 10:10
+Tag2 has timestamps: 10:02, 10:08
+Expression: IV + IV("Tag2")
+
+RESULT timestamps: 10:00, 10:02, 10:05, 10:08, 10:10
+
+
+10.2 Interpolation
+------------------------------------------------------------
+If a tag has no value at a specific timestamp:
+- dataPARC interpolates based on tag configuration
+- Linear interpolation (default for analog tags)
+- Step interpolation (for digital/discrete tags)
+
+
+10.3 No Manual Alignment Needed
+------------------------------------------------------------
+dataPARC automatically:
+- Aligns all tag values to common timestamps
+- Interpolates missing values
+- Handles different sampling rates
+- Manages time zones
+
+USER ACTION:
+None required. Alignment is automatic.
+
+
+10.4 Expression Evaluation Behavior
+------------------------------------------------------------
+Expressions are evaluated:
+- At every timestamp present in any input tag
+- Each referenced tag is interpolated to that timestamp
+- Output is calculated for every timestamp in the union
+
+============================================================
+11. EXPRESSION PATTERNS & EXAMPLES
+============================================================
+
+11.1 Simple Arithmetic
+------------------------------------------------------------
+Unit conversion (Celsius to Fahrenheit):
+Tag/EXPR=IV * 1.8 + 32
+
+Scaling:
+Tag/EXPR=IV * 100
+
+Offset correction:
+Tag/EXPR=IV - 5.2
+
+
+11.2 Weighted Averages
+------------------------------------------------------------
+Simple average:
+Tag/EXPR=(IV("Tag1") + IV("Tag2") + IV("Tag3")) / 3
+
+Weighted average:
+Tag/EXPR=(IV("Tag1")*0.5 + IV("Tag2")*0.3 + IV("Tag3")*0.2)
+
+Three-tag weighted:
+Tag/EXPR=(C.ReadPVAtTime("A", t) + C.ReadPVAtTime("B", t) + C.ReadPVAtTime("C", t)) / 3
+
+
+11.3 Digital Mode Logic
+------------------------------------------------------------
+Basic state check:
+C.IIF(C.StateNo(IV("Mode.Tag")) = 1, 100, 0)
+
+Nested mode logic:
+C.IIF(C.StateNo(C.ReadPVAtTime("TagA", IV.Timestamp)) = 1, 2,
+    C.IIF(C.StateNo(C.ReadPVAtTime("TagB", IV.Timestamp)) = 1, 1, 0))
+
+Mode-based calculation:
+C.IIF(C.StateNo(IV("Pump.Status")) = 1, IV("Flow.Rate"), 0)
+
+
+11.4 Totalizers with Formatting
+------------------------------------------------------------
+8-hour shift total:
+C.Concat("Flow = ",
+    C.Format(
+        C.ReadPVTotal("FI101", IV.Timestamp - TimeSpan.Parse("08:00:00"), IV.Timestamp) * 24,
+        "%0.1f m³"))
+
+Daily total:
+C.ReadPVTotal("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp)
+
+Formatted daily total:
+C.Format(C.ReadPVTotal("Flow", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp), "%0.2f")
+
+
+11.5 Time-Based Logic
+------------------------------------------------------------
+Blink every second:
+C.IIF(C.DatePart_Second(IV.Timestamp) mod 2 = 0, 0, 1)
+
+Business hours check:
+C.IIF(C.DatePart_Hour(IV.Timestamp) >= 8 AND C.DatePart_Hour(IV.Timestamp) < 17, 1, 0)
+
+Weekday detection:
+C.IIF(C.DatePart_Weekday(IV.Timestamp) >= 2 AND C.DatePart_Weekday(IV.Timestamp) <= 6, "Weekday", "Weekend")
+
+
+11.6 Cross-Tag Operations
+------------------------------------------------------------
+Simple addition:
+Tag1/EXPR=IV + IV("Tag2")
+
+Ratio:
+Tag1/EXPR=IV / IV("Tag2")
+
+Difference percentage:
+Tag1/EXPR=(IV - IV("Tag2")) / IV("Tag2") * 100
+
+Combined with time offset:
+Tag1/EXPR=IV - C.ReadPVAtTime("Tag2", IV.Timestamp - TimeSpan.Parse("01:00:00"))
+
+
+11.7 Advanced Math Patterns
+------------------------------------------------------------
+Pythagorean distance:
+Tag/EXPR=Math.Sqrt(Math.Pow(IV, 2) + Math.Pow(IV("Tag2"), 2))
+
+Logarithmic scale:
+Tag/EXPR=Math.Log10(IV)
+
+Trigonometric calculation:
+Tag/EXPR=Math.Sin(IV * Math.PI / 180)
+
+Exponential smoothing:
+Tag/EXPR=IV * 0.3 + IV("PrevValue") * 0.7
+
+
+11.8 Complex Nested Examples
+------------------------------------------------------------
+Multiple operations:
+VAN.Tag1/EXPR=IV + IV("VAN.Tag2/CALC=LowPassFilter(600,0,0)") + IV("VAN.Tag3/EXPR=IV*2")
+
+Conditional with filter:
+Tag/EXPR=C.IIF(IV > 100, 
+    IV("FilteredTag/CALC=LowPassFilter(300,0,0)"),
+    IV)
+
+Multiple totalizers:
+Tag/EXPR=C.ReadPVTotal("Flow1", start, end) + C.ReadPVTotal("Flow2", start, end)
+
+============================================================
+12. SCRIPT EDITOR USAGE
+============================================================
+
+12.1 Where to Enter Expressions
+------------------------------------------------------------
+Expressions can be entered in:
+
+1. Script Editor (for calculated tags)
+2. PARCview displays (using /EXPR= switch)
+3. Trend directly (paste tag with /EXPR=)
+4. Dashboard calculations
+
+
+12.2 Script Editor Features
+------------------------------------------------------------
+DRAG-AND-DROP:
+- Dragging tags into Script Editor auto-inserts correct syntax
+- Automatically formats as IV("Location.Source.TagName")
+
+VALIDATION:
+- Syntax checking before saving
+- Error highlighting
+
+TESTING:
+- Test expressions before deploying
+- View calculated results
+
+
+12.3 Using Expressions in Trends
+------------------------------------------------------------
+Scripted tags behave like regular tags:
+
+METHOD 1 - Drag and drop:
+- Drag scripted tag into trend
+
+METHOD 2 - Direct paste:
+- Paste: TagName/EXPR=<formula> directly into trend
+
+EXAMPLES:
+Tag.PV/EXPR=(IV-32)*5/9
+VAN.Sample.1-Sine/EXPR=IV + Math.Sin(IV("Sine.Tag"))
+
+LIMITATION:
+Only one tag switch can be applied at a time.
+Remove /PLOT or other switches before adding /EXPR.
+
+
+12.4 Best Practices
+------------------------------------------------------------
+1. Test expressions with simple data first
+2. Build complex expressions incrementally
+3. Use descriptive variable names in nested expressions
+4. Document complex logic with comments (in separate doc)
+5. Validate timestamp behavior with different time ranges
+
+============================================================
+13. COMPLETE FUNCTION REFERENCE
+============================================================
+
+HISTORIAN ACCESS:
+C.ReadPVAtTime(tag, timestamp)
+C.ReadPVAtTime(tag, timestamp, searchback)
+C.ReadPVTotal(tag, startTime, endTime)
+C.IV(tag, timestamp)
+IV
+IV("TagName")
+
+DIGITAL/STATE HANDLING:
+C.StateNo(value)
+
+BOOLEAN/CONDITIONAL:
+C.IIF(condition, trueValue, falseValue)
+IIF(condition, trueValue, falseValue)
+C.InRange(value, min, max)
+
+DATE/TIME:
+C.DatePart_Second(timestamp)
+C.DatePart_Minute(timestamp)
+C.DatePart_Hour(timestamp)
+C.DatePart_Day(timestamp)
+C.DatePart_Month(timestamp)
+C.DatePart_Weekday(timestamp)
+C.DatePart_Year(timestamp)
+TimeSpan.Parse(timeString)
+
+STRING:
+C.Concat(a, b, c, ...)
+C.Format(value, formatString)
+C.Left(str, n)
+string(value)
+
+NUMERIC:
+C.Int(value)
+
+MATH LIBRARY (Math.):
+Abs, Acos, Asin, Atan, Atan2
+BigMul, Ceiling, Cos, Cosh
+Exp, Floor, Log, Log10
+Max, Min, Pow, Round
+Sign, Sin, Sinh, Sqrt
+Tan, Tanh, Truncate
+
+============================================================
+14. INTEGRATION NOTES
+============================================================
+
+For developers converting from other systems:
+
+14.1 Language Characteristics
+------------------------------------------------------------
+- Fundamentally VB-like expression engine
+- All custom historian functionality in C. namespace
+- Full .NET Math library support
+- Expressions can nest indefinitely
+- Timestamp alignment happens automatically
+
+
+14.2 PI Vision to dataPARC Equivalents
+------------------------------------------------------------
+PI Vision          dataPARC
+---------          --------
+format()      ->   C.Format()
+tagtot()      ->   C.ReadPVTotal()
+stateno()     ->   C.StateNo()
+tagval()      ->   IV() or C.ReadPVAtTime()
+
+
+14.3 Key Differences
+------------------------------------------------------------
+1. Time offsets require TimeSpan.Parse() syntax
+2. All tags must be fully qualified (Location.Source.TagName)
+3. Tag switches (/EXPR=, /CALC=) are dataPARC-specific
+4. Nested expressions require &quot; for inner quotes
+5. Union timestamp behavior is automatic
+
+
+14.4 Common Migration Patterns
+------------------------------------------------------------
+BEFORE (PI Vision):
+'tag1' + 'tag2'
+
+AFTER (dataPARC):
+IV + IV("Location.Source.tag2")
+
+BEFORE (PI Vision):
+tagval('tag1','*-8h')
+
+AFTER (dataPARC):
+C.ReadPVAtTime("Location.Source.tag1", IV.Timestamp - TimeSpan.Parse("08:00:00"))
+
+============================================================
+END OF COMPLETE REFERENCE MANUAL
+============================================================
+
+Document Version: 1.0 Merged
+Last Updated: 2024
+Status: Production Ready
+
+For additional support, contact dataPARC technical support.
