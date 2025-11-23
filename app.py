@@ -15,7 +15,6 @@ st.markdown("""
         --dataparc-teal: #5DD9D1;
         --dataparc-dark: #1E3A5F;
         --dataparc-light-bg: #F7F9FC;
-        --dataparc-white: #FFFFFF;
     }
     
     #MainMenu {visibility: hidden;}
@@ -24,15 +23,6 @@ st.markdown("""
     
     .main {
         background-color: var(--dataparc-light-bg);
-    }
-    
-    .header-container {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-bottom: 4px solid var(--dataparc-teal);
     }
     
     .stChatMessage {
@@ -91,55 +81,38 @@ st.markdown("""
         border-top-color: var(--dataparc-teal) !important;
     }
     
-    [data-testid="column"] {
-        display: flex;
-        align-items: center;
+    /* Custom avatar sizing */
+    .stChatMessage img {
+        border-radius: 50%;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="header-container">', unsafe_allow_html=True)
-
-# Branded header with logo
+# Simple header with logo
 logo_exists = os.path.exists("dataparc_rebrand_black.png")
+avatar_exists = os.path.exists("dataparc_rebrand_social_blue.png")
+
+# Set avatar image
+assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "🔷"
 
 if logo_exists:
-    col1, col2 = st.columns([1, 4])
+    col1, col2 = st.columns([1, 5])
     with col1:
-        st.image("dataparc_rebrand_black.png", width=120)
+        st.image("dataparc_rebrand_black.png", width=100)
     with col2:
-        st.markdown("""
-            <div style='padding-top: 10px;'>
-                <h1 style='color: #1E3A5F; margin: 0; font-size: 32px; font-weight: 700;'>
-                    Expressions Assistant
-                </h1>
-                <p style='color: #5DD9D1; margin: 5px 0 0 0; font-size: 16px; font-weight: 500;'>
-                    Powered by AI - Industrial Analytics Intelligence
-                </p>
-                <p style='color: #666; margin: 5px 0 0 0; font-size: 14px;'>
-                    Get instant help with expressions, functions, and best practices
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.title("Expressions Assistant")
+        st.markdown("**Powered by AI - Industrial Analytics Intelligence**")
+        st.caption("Get instant help with expressions, functions, and best practices")
 else:
-    st.markdown("""
-        <div style='padding-top: 10px;'>
-            <h1 style='color: #1E3A5F; margin: 0; font-size: 36px; font-weight: 700;'>
-                dataPARC Expressions Assistant
-            </h1>
-            <p style='color: #5DD9D1; margin: 8px 0 0 0; font-size: 16px; font-weight: 500;'>
-                Powered by AI - Industrial Analytics Intelligence
-            </p>
-            <p style='color: #666; margin: 5px 0 0 0; font-size: 14px;'>
-                Get instant help with expressions, functions, and best practices
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.title("dataPARC Expressions Assistant")
+    st.markdown("**Powered by AI - Industrial Analytics Intelligence**")
+    st.caption("Get instant help with expressions, functions, and best practices")
 
-st.markdown("<hr style='margin: 20px 0; border: none; border-top: 2px solid #5DD9D1;'>", unsafe_allow_html=True)
+st.divider()
 
+# Welcome message
 if "welcomed" not in st.session_state:
-    with st.chat_message("assistant", avatar="🔷"):
+    with st.chat_message("assistant", avatar=assistant_avatar):
         st.markdown("""
         Welcome to the dataPARC Expressions Assistant!
         
@@ -153,6 +126,7 @@ if "welcomed" not in st.session_state:
         """)
     st.session_state.welcomed = True
 
+# Load knowledge base
 @st.cache_data
 def load_knowledge():
     try:
@@ -182,20 +156,24 @@ FUNCTION LIST:
 {function_list}
 """
 
+# Initialize Claude
 try:
     client = Anthropic(api_key=st.secrets["CLAUDE_API_KEY"])
 except KeyError:
     st.error("Claude API key not configured.")
     st.stop()
 
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display chat history
 for message in st.session_state.messages:
-    avatar = "🔷" if message["role"] == "assistant" else "👤"
+    avatar = assistant_avatar if message["role"] == "assistant" else "👤"
     with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
+# Chat input
 user_input = st.chat_input("Ask about dataPARC expressions...")
 
 if user_input:
@@ -203,7 +181,7 @@ if user_input:
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
     
-    with st.chat_message("assistant", avatar="🔷"):
+    with st.chat_message("assistant", avatar=assistant_avatar):
         with st.spinner("Analyzing..."):
             try:
                 claude_messages = []
@@ -238,12 +216,13 @@ if user_input:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
+# Sidebar
 with st.sidebar:
     if logo_exists:
         st.image("dataparc_rebrand_black.png", width=150)
-        st.markdown("---")
+        st.divider()
     
-    st.markdown("### About")
+    st.subheader("About")
     st.markdown("""
     This AI assistant helps dataPARC users with:
     - Expression syntax
@@ -252,32 +231,21 @@ with st.sidebar:
     - Best practices
     """)
     
-    st.markdown("---")
+    st.divider()
     
     if st.button("Clear Chat History"):
         st.session_state.messages = []
         st.session_state.welcomed = False
         st.rerun()
     
-    st.markdown("---")
+    st.divider()
     
-    st.markdown("""
-    <div style='text-align: center; padding: 20px 0;'>
-        <p style='color: rgba(255,255,255,0.6); font-size: 12px; margin: 0;'>
-            Secure and Private
-        </p>
-        <p style='color: rgba(255,255,255,0.6); font-size: 12px; margin: 5px 0 0 0;'>
-            Powered by Claude AI
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.caption("🔒 Secure and Private")
+    st.caption("Powered by Claude AI")
 
-st.markdown("---")
-st.markdown("""
-    <div style='text-align: center; color: #666; font-size: 13px; padding: 10px 0;'>
-        <p style='margin: 0;'>
-            Need more help? Contact 
-            <a href='https://www.dataparc.com/support' target='_blank' style='color: #5DD9D1;'>dataPARC Support</a>
-        </p>
-    </div>
-""", unsafe_allow_html=True)
+# Footer
+st.divider()
+st.markdown(
+    "Need more help? Contact [dataPARC Support](https://www.dataparc.com/support)",
+    unsafe_allow_html=True
+)
