@@ -130,10 +130,9 @@ if "welcomed" not in st.session_state:
 @st.cache_data
 def load_knowledge():
     try:
-        with open('Expressions RAG.txt', 'r', encoding='utf-8') as f:
-            expressions_rag = f.read()
-        with open('Expressions_Manual.txt', 'r', encoding='utf-8') as f:
-            expressions_manual = f.read()
+# NEW:
+        with open('Expressions_Complete.txt', 'r', encoding='utf-8') as f:
+            expressions_complete = f.read()
         with open('Function List.txt', 'r', encoding='utf-8') as f:
             function_list = f.read()
         with open('SuperPrompt_2.txt', 'r', encoding='utf-8') as f:
@@ -146,11 +145,8 @@ def load_knowledge():
 expressions_rag, expressions_manual, function_list, system_prompt = load_knowledge()
 
 knowledge_base = f"""
-EXPRESSIONS RAG:
-{expressions_rag}
-
-EXPRESSIONS MANUAL:
-{expressions_manual}
+COMPLETE EXPRESSIONS REFERENCE:
+{expressions_complete}
 
 FUNCTION LIST:
 {function_list}
