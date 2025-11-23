@@ -1,0 +1,29 @@
+Below are examples of typical pitfalls
+
+1. Multiple Tag Switches
+Example: VAN.PI.CALC/EXPR=C.IIF(..., 1, 0)/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 15)
+
+CRITICAL RULE VIOLATION
+Manual Section 9.1 & 12.3:
+Only ONE switch can be applied at a time.
+
+Problem: Expression uses both /EXPR= AND /CALC= on the same tag (illegal).
+
+Valid Workarounds
+Option 1: Nest /CALC Inside IV()
+VAN.PI.CALC/EXPR=C.IIF((C.StateNo(IV("Tag1/CALC=Conditions_RemoveSignals_Longer_Shorter_Than(&quot;ShorterThan&quot;, 15)")) = 2) OR ..., 1, 0)
+Move /CALC= inside IV() for input tag
+Use &quot; for nested quotes (Section 9.4)
+
+Option 2: Two-Stage Calculation
+Stage 1:
+VAN.PI.CALC_TEMP/EXPR=C.IIF(..., 1, 0)
+Stage 2:
+VAN.PI.CALC_TEMP/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 15)
+
+2. Setting constant explicitely
+Example: VAN.PI.CALC/EXPR=100 - this won't work as there is no input tag and there is no indication at which points to calculate the output (this is dictated by input tag and all the arguments, the rule is calc to all times)
+Example: VAN.PI.InputTag/EXPR=100 0 this will work in Script Editor, but doesnt work in Trends, syntaxis is not supported
+
+Valid Workarounds:
+The one I know is to multiply the tag by zero and add a constant: VAN.PI.InputTag/EXPR=IV*0+100
