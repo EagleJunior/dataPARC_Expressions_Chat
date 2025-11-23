@@ -100,6 +100,7 @@ st.markdown("""
 
 st.markdown('<div class="header-container">', unsafe_allow_html=True)
 
+# Branded header with logo
 logo_exists = os.path.exists("dataparc_rebrand_black.png")
 
 if logo_exists:
@@ -135,7 +136,7 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("<hr style='margin: 20px 0; border: none; border-top: 2px solid #5DD9D1;'>", unsafe_allow_html=True)
 
 if "welcomed" not in st.session_state:
     with st.chat_message("assistant", avatar="🔷"):
