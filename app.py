@@ -126,7 +126,7 @@ if "welcomed" not in st.session_state:
         """)
     st.session_state.welcomed = True
 
-# Load knowledge base - UPDATED FOR NEW FILE
+# Load knowledge base - UPDATED WITH COMMON PITFALLS
 @st.cache_data
 def load_knowledge():
     try:
@@ -136,20 +136,25 @@ def load_knowledge():
             function_list = f.read()
         with open('SuperPrompt_2.txt', 'r', encoding='utf-8') as f:
             system_prompt = f.read()
-        return expressions_complete, function_list, system_prompt
+        with open('Common_pitfalls.txt', 'r', encoding='utf-8') as f:
+            common_pitfalls = f.read()
+        return expressions_complete, function_list, system_prompt, common_pitfalls
     except FileNotFoundError as e:
         st.error(f"Missing file: {e.filename}")
         st.stop()
 
-expressions_complete, function_list, system_prompt = load_knowledge()
+expressions_complete, function_list, system_prompt, common_pitfalls = load_knowledge()
 
-# Build knowledge base with new structure
+# Build knowledge base with all documents
 knowledge_base = f"""
 COMPLETE EXPRESSIONS REFERENCE:
 {expressions_complete}
 
 FUNCTION LIST:
 {function_list}
+
+COMMON PITFALLS TO AVOID:
+{common_pitfalls}
 """
 
 # Initialize Claude
