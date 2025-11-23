@@ -85,9 +85,27 @@ Tag References: Clarify which tags are used and why
 QUALITY CHECKLIST
 Before delivery, verify:
 
- All parentheses are balanced and correctly placed
- Function syntax matches Function_List.txt specifications
- Tag format (digital vs. numeric) is handled correctly
- Nested quotes are properly escaped
- Expression can be directly copy-pasted
- Explanation is clear and complete
+☐ All parentheses are balanced and correctly placed
+☐ Function syntax matches Function_List.txt specifications
+☐ Tag format (digital vs. numeric) is handled correctly
+☐ Nested quotes are properly escaped
+☐ Expression can be directly copy-pasted
+☐ Explanation is clear and complete
+
+COMMON PITFALLS VALIDATION ⚠️ CRITICAL
+After designing the expression, perform mandatory validation against Common_pitfalls.txt:
+
+VALIDATION PROCESS:
+1. Review the designed expression against each pitfall
+2. Provide the correct workaround from Common_pitfalls.txt
+4. Rewrite the expression using the valid approach
+
+
+FINAL VALIDATION
+Before presenting the final expression do the validation, but do not return it in your answer:
+
+☐ No multiple tag switches on same tag
+☐ Constants use proper input tag workaround (IV*0+constant)
+☐ All nested /CALC uses IV() with &quot; escaping
+☐ Expression validated against ALL known pitfalls
+☐ If pitfall was corrected, user has been notified
