@@ -81,20 +81,20 @@ st.markdown("""
         border-top-color: var(--dataparc-teal) !important;
     }
     
-    /* Custom avatar sizing */
     .stChatMessage img {
         border-radius: 50%;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Simple header with logo
+# Check for logo and avatar files
 logo_exists = os.path.exists("dataparc_rebrand_black.png")
 avatar_exists = os.path.exists("dataparc_rebrand_social_blue.png")
 
-# Set avatar image
+# Set assistant avatar
 assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "🔷"
 
+# Simple header with logo
 if logo_exists:
     col1, col2 = st.columns([1, 5])
     with col1:
@@ -126,24 +126,24 @@ if "welcomed" not in st.session_state:
         """)
     st.session_state.welcomed = True
 
-# Load knowledge base
+# Load knowledge base - UPDATED FOR NEW FILE
 @st.cache_data
 def load_knowledge():
     try:
-# NEW:
         with open('Expressions_Complete.txt', 'r', encoding='utf-8') as f:
             expressions_complete = f.read()
         with open('Function List.txt', 'r', encoding='utf-8') as f:
             function_list = f.read()
         with open('SuperPrompt_2.txt', 'r', encoding='utf-8') as f:
             system_prompt = f.read()
-        return expressions_rag, expressions_manual, function_list, system_prompt
+        return expressions_complete, function_list, system_prompt
     except FileNotFoundError as e:
         st.error(f"Missing file: {e.filename}")
         st.stop()
 
-expressions_rag, expressions_manual, function_list, system_prompt = load_knowledge()
+expressions_complete, function_list, system_prompt = load_knowledge()
 
+# Build knowledge base with new structure
 knowledge_base = f"""
 COMPLETE EXPRESSIONS REFERENCE:
 {expressions_complete}
