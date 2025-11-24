@@ -116,4 +116,205 @@ Example: VAN.IP21.291FT6126/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("S
     ' - Outputs a 1 when the signal starts (becomes 1) and a 0 when the signal ends (becomes 0),
     '   but only for signals that pass the duration filter.
     ' ------------------------------------------------------------------------------
-		
+
+________________________________________________________________
+
+Function Name: Conditions_Extend_Event
+Example:
+TAG/CALC = Conditions_Extend_Event(30, "yes")
+
+	Script Purpose:
+	Extends the duration of each 1-signal event by adding Max minutes to its end time. Optionally merges overlapping events.
+
+	Input Arguments:
+	Max (Double): Minutes to extend the event end time.
+	Merge (String): "yes" merges overlapping events; "no" inserts a 0.1-second gap before the next event.
+
+	What the Script Does:
+	Reads the 0/1 signal and keeps the original start time.
+	Extends the end time by Max minutes.
+	If the extension overlaps the next event:
+	"yes" → merge into a single long event.
+	"no" → end current event 0.1 sec before next start.
+	Outputs the newly adjusted 1/0 event.
+________________________________________________________________
+
+Function Name: Conditions_Inverse_Signal
+Example:
+TAG/CALC = Conditions_Inverse_Signal()
+
+	Script Purpose:
+	Inverts a 0/1 signal: produces 0 when the input becomes 1, and 1 when the input becomes 0.
+
+	Input Arguments:
+	None.
+
+	What the Script Does:
+	Detects start (1) and end (0) of every event.
+	At signal start → outputs 0.
+	At signal end → outputs 1.
+	Generates a fully inverted event sequence.
+________________________________________________________________
+Function Name: Conditions_Move_Event_Start_End
+Example:
+TAG/CALC = Conditions_Move_Event_Start_End( -5, 10 )
+
+	Script Purpose:
+	Shifts the start and/or end timestamps of each 0/1 event by user-defined offsets (forward or backward in time).
+
+	Input Arguments:
+	Move_Start (Double): Minutes to shift the event start. (+ future, – past)
+	Move_End (Double): Minutes to shift the event end. (+ future, – past)
+
+	What the Script Does:
+	Detects each event (1 → 0).
+	Applies the specified time shifts to start and end.
+	Outputs a new 1 at the shifted start and a 0 at the shifted end.
+________________________________________________________________
+
+Function Name: Conditions_Start_Middle_End
+
+	Example:
+	TAG/CALC = Conditions_Start_Middle_End("middle")
+
+	Script Purpose:
+	Generates a short (0.1-second) event placed at the start, middle, or end of each detected input event.
+
+	Input Arguments:
+	Type (String): "start", "middle", "end" — defines where the 0.1-sec event will be placed.
+
+	What the Script Does:
+	Reads 0/1 signal and identifies start/end of each event.
+	Calculates the chosen position (start, middle, or end).
+	Outputs 1 at that timestamp and 0 exactly 0.1 seconds later.
+________________________________________________________________
+Function Name: Event_Join
+
+Example:
+TAG/CALC = Event_Join("TAG_A", "TAG_B", "AandB")
+
+	Script Purpose:
+	Joins two 0/1 event signals based on a selected rule and outputs a new event indicating the relationship between them.
+
+	Input Arguments:
+	tagA (String): First event signal.
+	tagB (String): Second event signal.
+	optionType (String): Defines join logic:
+	"AandB" – Output 1 when A starts; output 0 when B ends.
+	"AandGap" – Output 1 when A starts; output 0 when B starts.
+	"GapOnly" – Output 1 when A ends; output 0 when B starts.
+
+	What the Script Does:
+	Reads raw data for both tags.
+	Detects event transitions (start/end).
+	Applies the selected join rule.
+	Writes paired 1/0 events according to the chosen mode.
+________________________________________________________________	
+Function Name: Smoothing_Filter
+Example:
+TAG/CALC = Smoothing_Filter("mavg", 10)
+
+	Script Purpose:
+	Smooths a numeric signal using one of three filtering methods: moving average, Gaussian, or median.
+
+	Input Arguments:
+	SmoothingType (String): "mavg", "gaussian", or "median".
+	WindowSize (Double): Filter window size (number of data points).
+
+	What the Script Does:
+	Reads the raw signal.
+	Applies the chosen smoothing method:
+	mavg → simple moving average
+	gaussian → weighted Gaussian kernel filtering
+	median → median filter for outlier removal
+	Outputs the smoothed time series with original timestamps.
+________________________________________________________________	
+Function Name: Acummulator_On_Signal
+Example:
+TAG/CALC = Acummulator_On_Signal("ResetTag", "start")
+
+	Script Purpose:
+	Accumulates the value of the main input tag and resets the accumulator whenever the reset signal changes state (depending on the selected mode).
+
+	Input Arguments:
+	ResetSignalTag (String): 0/1 tag that controls reset.
+	ResetMode (String):
+	"start" → reset on rising edge (0→1)
+	"end" → reset on falling edge (1→0)
+	"both" → reset on any transition
+
+	What the Script Does:
+	Normalizes data to the reset signal tag.
+	Detects transitions of the reset signal.
+	For each period between resets, computes the total of the main tag (via average × count).
+	Writes the accumulated total at the start of each period.
+	Outputs the final incomplete period at the end of the calculation.
+________________________________________________________________	
+Function Name: Aggregates_during_condition_with_timestamp
+Example:
+TAG/CALC = Aggregates_during_condition_with_timestamp("CondTag", 4, "end")
+
+	Script Purpose:
+	Calculates an aggregate (min, max, avg, etc.) of the main tag during periods where a condition tag is 1, and outputs the aggregate at a selected timestamp.
+
+	Input Arguments:
+	ConditionTag (String): 0/1 condition signal.
+	AggregationType (Double): dataPARC TagStat type (e.g., 4 = time average, 8/10 = min/max).
+	TimestampOption (String): where to place the result timestamp:
+	"start", "end", "middle", "min", "max"
+
+	What the Script Does:
+	Detects each condition period (1 → 0).
+	Computes the chosen aggregate using TagStat.
+	Writes the result using the timestamp rule specified by TimestampOption.
+	Outputs one value per condition period.
+________________________________________________________________
+Function Name: Condition_Comparison_to_numeric_value
+Example:
+TAG/CALC = Condition_Comparison_to_numeric_value("dp.PIpgb101_VRW_ChgNr.CN/digital=numeric", 50)
+
+	Script Purpose:
+	Compares an input tag to a target numeric value and generates a 1/0 event:
+	1 when the tag value becomes equal to the target value
+	0 when the value changes away from the target
+	Supports both numeric tags and digital tags converted to numeric using /digital=numeric.
+
+	Input Arguments:
+	Tag (String): The tag to monitor (numeric or digital).
+	TargetValue (Double): The numeric value to compare against.
+
+	What the Script Does:
+	Reads raw values of the input tag.
+	Detects transitions:
+	When the value equals the target → writes 1.
+	When the value deviates from the target → writes 0.
+	Outputs a single event per matching period.
+
+	Works for:
+	real numeric tags
+	digital tags converted via /digital=numeric
+________________________________________________________________
+Function Name: Condition_Comparison_to_text_value
+Example:
+TAG/CALC = Condition_Comparison_to_text_value("dp.PIpigb101_VRW_ChgNr.CN/digital=text", "Alarm")
+
+	Script Purpose:
+	Compares an input tag’s text value to a target string and generates a 1/0 event:
+	1 when the tag equals the target text
+	0 when the tag changes away from it
+	Supports digital tags converted to text via /digital=text.
+
+	Input Arguments:
+	Tag (String): The tag to compare (native text or digital→text).
+	TargetValue (String): The text value that defines the active condition.
+
+	What the Script Does:
+	Reads raw text values of the input tag.
+	Detects transitions:
+	When value equals the target → writes 1.
+	When it changes to anything else → writes 0.
+	Outputs one event per matching period.
+
+	Works with:
+	standard text/string tags
+	digital tags converted via /digital=text (ON/OFF mapped to strings)
