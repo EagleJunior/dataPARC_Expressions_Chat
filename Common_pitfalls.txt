@@ -1,4 +1,5 @@
 Below are examples of typical pitfalls
+_____
 
 1. Multiple Tag Switches
 Example: VAN.PI.CALC/EXPR=C.IIF(..., 1, 0)/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 15)
@@ -20,6 +21,7 @@ Stage 1:
 VAN.PI.CALC_TEMP/EXPR=C.IIF(..., 1, 0)
 Stage 2:
 VAN.PI.CALC_TEMP/CALC=Conditions_RemoveSignals_Longer_Shorter_Than("ShorterThan", 15)
+_____
 
 2. Setting constant explicitely
 Example: VAN.PI.CALC/EXPR=100 - this won't work as there is no input tag and there is no indication at which points to calculate the output (this is dictated by input tag and all the arguments, the rule is calc to all times)
@@ -27,3 +29,50 @@ Example: VAN.PI.InputTag/EXPR=100 0 this will work in Script Editor, but doesnt 
 
 Valid Workarounds:
 The one I know is to multiply the tag by zero and add a constant: VAN.PI.InputTag/EXPR=IV*0+100
+
+_____
+
+3. Digital Tag /digital Switch Inside IV() Function - Trends Only
+Example (doesn't work in Trends): Tag/EXPR=IV("VAN.PI.Status/digital=numeric")
+Example (doesn't work in Trends): Tag/EXPR=IV("VAN.PI.Mode/digital=text")
+
+CRITICAL PLATFORM LIMITATION
+Manual Section 2.7:
+IV("Tag/digital=...") works in Script Editor but NOT in Trends.
+
+Problem: 
+Using /digital=numeric or /digital=text switches inside IV() expressions:
+✅ WORKS in Script Editor (can calculate and save)
+❌ DOES NOT WORK when used directly in Trends
+
+This is similar to Pitfall #2 (constants): Script Editor supports syntax that Trends does not.
+
+Valid Workarounds
+
+OPTION 1: Use C.StateNo() (Works Everywhere):
+Tag/EXPR=C.StateNo(IV("VAN.PI.Status"))
+OPTION 2: Two-Stage via Script Editor (For Trends):
+If you specifically need /digital switch behavior in Trends:
+
+STEP 1 - Create in Script Editor:
+VAN.PI.VAN.PI.Status/EXPR=IV("VAN.PI.Status/digital=numeric")
+Save as calculated tag VAN.CAlC.Status_Numeric
+
+STEP 2 - Use in Trends:
+Tag/EXPR=IV("VAN.CALC.Status_Numeric") + 10
+
+Similar 2-step approach is viable for Text conditions
+
+OPTION 3:
+If the condition is to be built using digital tag numeric or tag values, library functions, if they exist, can be used for creating 1/0signal comparing digital or numeric part of a digital tags to the values. See function descriptions for
+    Condition_Comparison_to_numeric_value
+    Condition_Comparison_to_text_value
+Important: result will also work only in Script Editor, not in Trend directly, or only after saving a cacled tag
+
+Example: Tag/EXPR=IV("TagName/CALC=Condition_Comparison_to_numeric_value(TagName/digital=Numeric,100)) - notice that quotes are not needed in such case for unknown reason
+
+RECOMMENDED APPROACH:
+For any digital tag logic that needs to work in Trends:
+1. ALWAYS use C.StateNo(IV("DigitalTag")), if the mapping between desired text and numeric value is known
+OR if /digital switch is required:
+-- Suggest Option 2 or Option 3. Option 3 packs everything into one expression that needs to be saved to work in trends. Option 2 requires 2 steps and also requires saving a calced tag first, but offers an intermediate result for additional checks.
