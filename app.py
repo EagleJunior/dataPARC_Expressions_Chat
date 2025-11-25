@@ -457,32 +457,32 @@ with col2:
         st.session_state.show_feedback = True
         st.rerun()
 
-# Custom CSS for corporate button colors
+# Custom CSS for calm corporate button colors
 st.markdown("""
     <style>
-    /* Clear Chat History button - Dark Blue */
+    /* Clear Chat History button - Calm Gray */
     button[key="clear_history"] {
-        background: linear-gradient(135deg, #1E5B7E 0%, #1E3A5F 100%) !important;
-        border-color: #1E5B7E !important;
+        background: linear-gradient(135deg, #6C757D 0%, #5A6268 100%) !important;
+        border-color: #6C757D !important;
         color: white !important;
         font-weight: 600 !important;
     }
     button[key="clear_history"]:hover {
-        background: linear-gradient(135deg, #2A6B8E 0%, #2A4A6F 100%) !important;
-        box-shadow: 0 4px 8px rgba(30, 91, 126, 0.3) !important;
+        background: linear-gradient(135deg, #7C858D 0%, #6A7278 100%) !important;
+        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3) !important;
         transform: translateY(-1px) !important;
     }
     
-    /* Send Feedback button - Corporate Teal */
+    /* Send Feedback button - Calm Blue */
     button[kind="primary"] {
-        background: linear-gradient(135deg, #00A9A5 0%, #5DD9D1 100%) !important;
-        border-color: #00A9A5 !important;
+        background: linear-gradient(135deg, #4A90E2 0%, #5CA3F5 100%) !important;
+        border-color: #4A90E2 !important;
         color: white !important;
         font-weight: 600 !important;
     }
     button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #00C4BF 0%, #6DE9E1 100%) !important;
-        box-shadow: 0 4px 8px rgba(0, 169, 165, 0.3) !important;
+        background: linear-gradient(135deg, #5AA0F2 0%, #6CB3FF 100%) !important;
+        box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3) !important;
         transform: translateY(-1px) !important;
     }
     </style>
