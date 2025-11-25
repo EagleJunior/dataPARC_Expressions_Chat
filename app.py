@@ -88,8 +88,17 @@ st.set_page_config(
     page_title="dataPARC Expressions Assistant",
     page_icon="dataparc_rebrand_black.png",
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
+
+# Hide sidebar completely
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # CSS styling
 st.markdown("""
@@ -190,20 +199,6 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    [data-testid="stSidebar"] {
-        background-color: var(--dataparc-dark);
-    }
-    
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3 {
-        color: white;
-    }
-    
-    [data-testid="stSidebar"] p {
-        color: rgba(255,255,255,0.85);
-    }
-    
     .stSpinner > div {
         border-top-color: var(--dataparc-teal) !important;
     }
@@ -211,33 +206,6 @@ st.markdown("""
     .stChatMessage img {
         border-radius: 50%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    /* Feedback button styling - Extra prominent */
-    div[data-testid="stSidebar"] button[key="feedback_button"] {
-        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
-        color: white !important;
-        border: 2px solid #FF8E53 !important;
-        font-weight: 700 !important;
-        font-size: 16px !important;
-    }
-    
-    div[data-testid="stSidebar"] button[key="feedback_button"]:hover {
-        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
-        border: 2px solid #FFA07A !important;
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
-        transform: translateY(-2px) !important;
-    }
-    
-    /* Alternative selector for feedback button */
-    .feedback-button button {
-        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
-        color: white !important;
-        border: 2px solid #FF8E53 !important;
-    }
-    
-    .feedback-button button:hover {
-        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -473,29 +441,6 @@ if st.session_state.show_feedback:
             st.session_state.show_feedback = False
             st.rerun()
 
-# Sidebar
-with st.sidebar:
-    if logo_white_exists:
-        st.image("dataparc_rebrand_white.png", width=150)
-    elif logo_black_exists:
-        st.image("dataparc_rebrand_black.png", width=150)
-    
-    st.divider()
-    
-    st.subheader("About")
-    st.markdown("""
-    This AI assistant helps dataPARC users with:
-    - Expression syntax
-    - Function documentation
-    - Troubleshooting
-    - Best practices
-    """)
-    
-    st.divider()
-    
-    st.caption("🔒 Secure and Private")
-    st.caption("Powered by Claude AI")
-
 # Action buttons above footer
 st.divider()
 
@@ -512,18 +457,33 @@ with col2:
         st.session_state.show_feedback = True
         st.rerun()
 
-# Custom CSS for orange feedback button
+# Custom CSS for corporate button colors
 st.markdown("""
     <style>
-    /* Force orange color on feedback button */
-    button[kind="primary"] {
-        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
-        border-color: #FF8E53 !important;
+    /* Clear Chat History button - Dark Blue */
+    button[key="clear_history"] {
+        background: linear-gradient(135deg, #1E5B7E 0%, #1E3A5F 100%) !important;
+        border-color: #1E5B7E !important;
         color: white !important;
+        font-weight: 600 !important;
+    }
+    button[key="clear_history"]:hover {
+        background: linear-gradient(135deg, #2A6B8E 0%, #2A4A6F 100%) !important;
+        box-shadow: 0 4px 8px rgba(30, 91, 126, 0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Send Feedback button - Corporate Teal */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #00A9A5 0%, #5DD9D1 100%) !important;
+        border-color: #00A9A5 !important;
+        color: white !important;
+        font-weight: 600 !important;
     }
     button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
+        background: linear-gradient(135deg, #00C4BF 0%, #6DE9E1 100%) !important;
+        box-shadow: 0 4px 8px rgba(0, 169, 165, 0.3) !important;
+        transform: translateY(-1px) !important;
     }
     </style>
 """, unsafe_allow_html=True)
