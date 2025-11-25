@@ -25,6 +25,60 @@ st.markdown("""
         background-color: var(--dataparc-light-bg);
     }
     
+    /* Dark mode adjustments */
+    @media (prefers-color-scheme: dark) {
+        .main {
+            background-color: #1a1a1a;
+        }
+        
+        /* Make chat messages visible in dark mode */
+        .stChatMessage {
+            background-color: #2d2d2d !important;
+            border-left-color: var(--dataparc-teal) !important;
+            color: #ffffff !important;
+        }
+        
+        /* User messages slightly different shade */
+        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+            background: linear-gradient(to right, #252525 0%, #2d2d2d 100%) !important;
+            border-left-color: var(--dataparc-teal) !important;
+        }
+        
+        /* Avatar images - add white background circle for visibility */
+        .stChatMessage img {
+            background-color: white !important;
+            padding: 4px !important;
+            border: 2px solid var(--dataparc-teal) !important;
+        }
+        
+        /* Title and text */
+        h1, h2, h3, p, div {
+            color: #ffffff !important;
+        }
+        
+        /* Caption text */
+        .stCaption {
+            color: #b0b0b0 !important;
+        }
+        
+        /* Input area */
+        .stChatInputContainer {
+            background-color: #2d2d2d !important;
+            border-top-color: var(--dataparc-teal) !important;
+        }
+        
+        /* Dividers */
+        hr {
+            border-color: #404040 !important;
+        }
+        
+        /* Footer links */
+        a {
+            color: var(--dataparc-teal) !important;
+        }
+    }
+    
+    /* Light mode (existing styles) */
     .stChatMessage {
         background-color: white;
         border-radius: 12px;
@@ -81,8 +135,10 @@ st.markdown("""
         border-top-color: var(--dataparc-teal) !important;
     }
     
+    /* Avatar styling - works in both modes */
     .stChatMessage img {
         border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     </style>
 """, unsafe_allow_html=True)
