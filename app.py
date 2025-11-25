@@ -25,78 +25,50 @@ st.markdown("""
         background-color: var(--dataparc-light-bg);
     }
     
-    /* Hide light mode logo in dark mode */
-    @media (prefers-color-scheme: dark) {
-        .logo-light {
-            display: none !important;
-        }
-        .logo-dark {
-            display: block !important;
-        }
-    }
-    
-    /* Hide dark mode logo in light mode */
-    @media (prefers-color-scheme: light) {
-        .logo-light {
-            display: block !important;
-        }
-        .logo-dark {
-            display: none !important;
-        }
-    }
-    
     /* Dark mode adjustments */
     @media (prefers-color-scheme: dark) {
         .main {
             background-color: #1a1a1a;
         }
         
-        /* Make chat messages visible in dark mode */
         .stChatMessage {
             background-color: #2d2d2d !important;
             border-left-color: var(--dataparc-teal) !important;
             color: #ffffff !important;
         }
         
-        /* User messages slightly different shade */
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
             background: linear-gradient(to right, #252525 0%, #2d2d2d 100%) !important;
             border-left-color: var(--dataparc-teal) !important;
         }
         
-        /* Title and text */
         h1, h2, h3, p, div {
             color: #ffffff !important;
         }
         
-        /* Strong/bold text */
         strong {
             color: #ffffff !important;
         }
         
-        /* Caption text */
         .stMarkdown, .stCaption {
             color: #b0b0b0 !important;
         }
         
-        /* Input area */
         .stChatInputContainer {
             background-color: #2d2d2d !important;
             border-top-color: var(--dataparc-teal) !important;
         }
         
-        /* Dividers */
         hr {
             border-color: #404040 !important;
         }
         
-        /* Footer links */
         a {
             color: var(--dataparc-teal) !important;
         }
     }
     
-    /* Light mode (existing styles) */
+    /* Light mode styles */
     .stChatMessage {
         background-color: white;
         border-radius: 12px;
@@ -153,7 +125,6 @@ st.markdown("""
         border-top-color: var(--dataparc-teal) !important;
     }
     
-    /* Avatar styling */
     .stChatMessage img {
         border-radius: 50%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -171,14 +142,32 @@ assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "ðŸ”
 
 # Header with adaptive logos for dark/light mode
 if logo_black_exists and logo_white_exists:
+    # Inline CSS for logo switching
+    st.markdown("""
+        <style>
+        .logo-light-mode {
+            display: block;
+        }
+        .logo-dark-mode {
+            display: none;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .logo-light-mode {
+                display: none !important;
+            }
+            .logo-dark-mode {
+                display: block !important;
+            }
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns([1, 5])
     with col1:
-        # Show black logo in light mode, white logo in dark mode
-        st.markdown('<div class="logo-light">', unsafe_allow_html=True)
+        st.markdown('<div class="logo-light-mode">', unsafe_allow_html=True)
         st.image("dataparc_rebrand_black.png", width=100)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('<div class="logo-dark" style="display: none;">', unsafe_allow_html=True)
+        st.markdown('</div><div class="logo-dark-mode">', unsafe_allow_html=True)
         st.image("dataparc_rebrand_white.png", width=100)
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
@@ -186,7 +175,6 @@ if logo_black_exists and logo_white_exists:
         st.markdown("**Powered by AI - Industrial Analytics Intelligence**")
         st.caption("Get instant help with expressions, functions, and best practices")
 elif logo_black_exists:
-    # Fallback if white logo missing
     col1, col2 = st.columns([1, 5])
     with col1:
         st.image("dataparc_rebrand_black.png", width=100)
@@ -217,7 +205,7 @@ if "welcomed" not in st.session_state:
         """)
     st.session_state.welcomed = True
 
-# Load knowledge base - UPDATED WITH COMMON PITFALLS
+# Load knowledge base
 @st.cache_data
 def load_knowledge():
     try:
@@ -236,7 +224,7 @@ def load_knowledge():
 
 expressions_complete, function_list, system_prompt, common_pitfalls = load_knowledge()
 
-# Build knowledge base with all documents
+# Build knowledge base
 knowledge_base = f"""
 COMPLETE EXPRESSIONS REFERENCE:
 {expressions_complete}
@@ -308,9 +296,8 @@ if user_input:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
-# Sidebar with adaptive logo
+# Sidebar
 with st.sidebar:
-    # Show appropriate logo based on mode
     if logo_white_exists:
         st.image("dataparc_rebrand_white.png", width=150)
     elif logo_black_exists:
