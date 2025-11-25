@@ -25,6 +25,26 @@ st.markdown("""
         background-color: var(--dataparc-light-bg);
     }
     
+    /* Hide light mode logo in dark mode */
+    @media (prefers-color-scheme: dark) {
+        .logo-light {
+            display: none !important;
+        }
+        .logo-dark {
+            display: block !important;
+        }
+    }
+    
+    /* Hide dark mode logo in light mode */
+    @media (prefers-color-scheme: light) {
+        .logo-light {
+            display: block !important;
+        }
+        .logo-dark {
+            display: none !important;
+        }
+    }
+    
     /* Dark mode adjustments */
     @media (prefers-color-scheme: dark) {
         .main {
@@ -44,20 +64,18 @@ st.markdown("""
             border-left-color: var(--dataparc-teal) !important;
         }
         
-        /* Avatar images - add white background circle for visibility */
-        .stChatMessage img {
-            background-color: white !important;
-            padding: 4px !important;
-            border: 2px solid var(--dataparc-teal) !important;
-        }
-        
         /* Title and text */
         h1, h2, h3, p, div {
             color: #ffffff !important;
         }
         
+        /* Strong/bold text */
+        strong {
+            color: #ffffff !important;
+        }
+        
         /* Caption text */
-        .stCaption {
+        .stMarkdown, .stCaption {
             color: #b0b0b0 !important;
         }
         
@@ -135,7 +153,7 @@ st.markdown("""
         border-top-color: var(--dataparc-teal) !important;
     }
     
-    /* Avatar styling - works in both modes */
+    /* Avatar styling */
     .stChatMessage img {
         border-radius: 50%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -144,14 +162,31 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Check for logo and avatar files
-logo_exists = os.path.exists("dataparc_rebrand_black.png")
+logo_black_exists = os.path.exists("dataparc_rebrand_black.png")
+logo_white_exists = os.path.exists("dataparc_rebrand_white.png")
 avatar_exists = os.path.exists("dataparc_rebrand_social_blue.png")
 
 # Set assistant avatar
 assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "🔷"
 
-# Simple header with logo
-if logo_exists:
+# Header with adaptive logos for dark/light mode
+if logo_black_exists and logo_white_exists:
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        # Show black logo in light mode, white logo in dark mode
+        st.markdown('<div class="logo-light">', unsafe_allow_html=True)
+        st.image("dataparc_rebrand_black.png", width=100)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="logo-dark" style="display: none;">', unsafe_allow_html=True)
+        st.image("dataparc_rebrand_white.png", width=100)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.title("Expressions Assistant")
+        st.markdown("**Powered by AI - Industrial Analytics Intelligence**")
+        st.caption("Get instant help with expressions, functions, and best practices")
+elif logo_black_exists:
+    # Fallback if white logo missing
     col1, col2 = st.columns([1, 5])
     with col1:
         st.image("dataparc_rebrand_black.png", width=100)
@@ -273,11 +308,15 @@ if user_input:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
-# Sidebar
+# Sidebar with adaptive logo
 with st.sidebar:
-    if logo_exists:
+    # Show appropriate logo based on mode
+    if logo_white_exists:
+        st.image("dataparc_rebrand_white.png", width=150)
+    elif logo_black_exists:
         st.image("dataparc_rebrand_black.png", width=150)
-        st.divider()
+    
+    st.divider()
     
     st.subheader("About")
     st.markdown("""
