@@ -2,6 +2,10 @@ import streamlit as st
 from anthropic import Anthropic
 import os
 import base64
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
 # Helper function to convert image to base64
 def get_base64_image(image_path):
@@ -11,6 +15,75 @@ def get_base64_image(image_path):
     except:
         return ""
 
+# Format conversation for email
+def format_conversation(messages):
+    """Format conversation messages for email"""
+    if not messages:
+        return "No conversation included"
+    
+    formatted = []
+    for i, msg in enumerate(messages, 1):
+        role = "USER" if msg["role"] == "user" else "ASSISTANT"
+        separator = "-" * 60
+        formatted.append(f"\n{separator}\nMessage {i} - {role}\n{separator}\n{msg['content']}\n")
+    
+    return "\n".join(formatted)
+
+# Gmail SMTP email function
+def send_feedback_email(feedback, company, conversation):
+    """Send feedback via Gmail SMTP"""
+    try:
+        # Get credentials from secrets
+        sender_email = st.secrets["FEEDBACK_EMAIL"]
+        sender_password = st.secrets["FEEDBACK_PASSWORD"]
+        receiver_email = st.secrets["DEVELOPER_EMAIL"]
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = f"dataPARC Expressions Feedback - {company if company else 'Anonymous'}"
+        
+        # Email body
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+        body = f"""
+New Feedback Received from dataPARC Expressions Assistant
+{'='*70}
+
+Time: {timestamp}
+Company: {company if company else 'Not provided'}
+
+FEEDBACK:
+{'-'*70}
+{feedback}
+
+{'='*70}
+CONVERSATION CONTEXT:
+{'='*70}
+
+{format_conversation(conversation) if conversation else 'Not included'}
+
+{'='*70}
+Sent from dataPARC Expressions Chat Assistant
+https://dataparc.com
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send via Gmail SMTP
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        
+        return True
+        
+    except Exception as e:
+        st.error(f"Failed to send feedback: {str(e)}")
+        return False
+
+# Page config
 st.set_page_config(
     page_title="dataPARC Expressions Assistant",
     page_icon="dataparc_rebrand_black.png",
@@ -18,6 +91,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# CSS styling
 st.markdown("""
     <style>
     :root {
@@ -138,6 +212,16 @@ st.markdown("""
         border-radius: 50%;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
+    
+    /* Feedback button styling */
+    .feedback-button button {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
+        color: white !important;
+    }
+    
+    .feedback-button button:hover {
+        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -149,7 +233,7 @@ avatar_exists = os.path.exists("dataparc_rebrand_social_blue.png")
 # Set assistant avatar
 assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "🔷"
 
-# Header with adaptive logo using base64 embedded images
+# Header with adaptive logo
 if logo_black_exists and logo_white_exists:
     col1, col2 = st.columns([1, 5])
     with col1:
@@ -252,6 +336,10 @@ except KeyError:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Initialize feedback modal state
+if "show_feedback" not in st.session_state:
+    st.session_state.show_feedback = False
+
 # Display chat history
 for message in st.session_state.messages:
     avatar = assistant_avatar if message["role"] == "assistant" else "👤"
@@ -301,6 +389,73 @@ if user_input:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
+# Feedback Modal
+if st.session_state.show_feedback:
+    st.markdown("---")
+    st.markdown("### 📝 Send Feedback")
+    st.write("Help us improve the dataPARC Expressions Assistant!")
+    
+    with st.form("feedback_form", clear_on_submit=False):
+        feedback_text = st.text_area(
+            "Your Feedback *",
+            placeholder="Tell us what you think, report issues, or suggest improvements...",
+            height=150,
+            key="feedback_text"
+        )
+        
+        company_name = st.text_input(
+            "Company Name (optional)",
+            placeholder="Your company or organization",
+            key="company_name"
+        )
+        
+        include_conversation = st.checkbox(
+            "📎 Include current conversation in feedback",
+            value=False,
+            help="This helps us understand the context of your feedback",
+            key="include_conv"
+        )
+        
+        if include_conversation and st.session_state.messages:
+            with st.expander("Preview conversation to be included"):
+                st.caption(f"{len(st.session_state.messages)} messages will be included")
+                for msg in st.session_state.messages[-3:]:  # Show last 3 messages as preview
+                    role = "You" if msg["role"] == "user" else "Assistant"
+                    st.text(f"{role}: {msg['content'][:100]}...")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            cancel = st.form_submit_button("Cancel", use_container_width=True)
+        with col2:
+            submit = st.form_submit_button("Send Feedback", type="primary", use_container_width=True)
+        
+        if submit:
+            if feedback_text.strip():
+                with st.spinner("Sending feedback..."):
+                    success = send_feedback_email(
+                        feedback=feedback_text,
+                        company=company_name if company_name.strip() else None,
+                        conversation=st.session_state.messages if include_conversation else None
+                    )
+                
+                if success:
+                    st.success("✅ Feedback sent successfully! Thank you for helping us improve.")
+                    st.balloons()
+                    st.session_state.show_feedback = False
+                    # Clear form
+                    st.session_state.pop("feedback_text", None)
+                    st.session_state.pop("company_name", None)
+                    st.session_state.pop("include_conv", None)
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to send feedback. Please try again or contact support.")
+            else:
+                st.error("Please enter your feedback before submitting.")
+        
+        if cancel:
+            st.session_state.show_feedback = False
+            st.rerun()
+
 # Sidebar
 with st.sidebar:
     if logo_white_exists:
@@ -321,10 +476,19 @@ with st.sidebar:
     
     st.divider()
     
-    if st.button("Clear Chat History"):
+    if st.button("Clear Chat History", use_container_width=True):
         st.session_state.messages = []
         st.session_state.welcomed = False
         st.rerun()
+    
+    st.divider()
+    
+    # Feedback button
+    st.markdown('<div class="feedback-button">', unsafe_allow_html=True)
+    if st.button("📝 Send Feedback", use_container_width=True, key="feedback_button"):
+        st.session_state.show_feedback = True
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.divider()
     
