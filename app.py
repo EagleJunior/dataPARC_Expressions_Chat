@@ -493,35 +493,40 @@ with st.sidebar:
     
     st.divider()
     
-    if st.button("Clear Chat History", use_container_width=True):
+    st.caption("🔒 Secure and Private")
+    st.caption("Powered by Claude AI")
+
+# Action buttons above footer
+st.divider()
+
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("🗑️ Clear Chat History", use_container_width=True, key="clear_history"):
         st.session_state.messages = []
         st.session_state.welcomed = False
         st.rerun()
-    
-    st.divider()
-    
-    # Feedback button - Orange and prominent
+
+with col2:
     if st.button("📝 Send Feedback", use_container_width=True, key="feedback_button", type="primary"):
         st.session_state.show_feedback = True
         st.rerun()
-    
-    st.markdown("""
-        <style>
-        /* Force orange color on feedback button */
-        button[kind="primary"] {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
-            border-color: #FF8E53 !important;
-        }
-        button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    st.divider()
-    
-    st.caption("🔒 Secure and Private")
-    st.caption("Powered by Claude AI")
+
+# Custom CSS for orange feedback button
+st.markdown("""
+    <style>
+    /* Force orange color on feedback button */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
+        border-color: #FF8E53 !important;
+        color: white !important;
+    }
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Footer
 st.divider()
