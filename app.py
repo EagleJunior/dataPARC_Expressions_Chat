@@ -1,6 +1,15 @@
 import streamlit as st
 from anthropic import Anthropic
 import os
+import base64
+
+# Helper function to convert image to base64
+def get_base64_image(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return ""
 
 st.set_page_config(
     page_title="dataPARC Expressions Assistant",
@@ -140,36 +149,32 @@ avatar_exists = os.path.exists("dataparc_rebrand_social_blue.png")
 # Set assistant avatar
 assistant_avatar = "dataparc_rebrand_social_blue.png" if avatar_exists else "🔷"
 
-# Header with adaptive logos for dark/light mode
+# Header with adaptive logo using base64 embedded images
 if logo_black_exists and logo_white_exists:
-    # Inline CSS for logo switching
-    st.markdown("""
-        <style>
-        .logo-light-mode {
-            display: block;
-        }
-        .logo-dark-mode {
-            display: none;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-            .logo-light-mode {
-                display: none !important;
-            }
-            .logo-dark-mode {
-                display: block !important;
-            }
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
     col1, col2 = st.columns([1, 5])
     with col1:
-        st.markdown('<div class="logo-light-mode">', unsafe_allow_html=True)
-        st.image("dataparc_rebrand_black.png", width=100)
-        st.markdown('</div><div class="logo-dark-mode">', unsafe_allow_html=True)
-        st.image("dataparc_rebrand_white.png", width=100)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+            <style>
+            .adaptive-logo-black {{
+                display: block;
+                width: 100px;
+            }}
+            .adaptive-logo-white {{
+                display: none;
+                width: 100px;
+            }}
+            @media (prefers-color-scheme: dark) {{
+                .adaptive-logo-black {{
+                    display: none !important;
+                }}
+                .adaptive-logo-white {{
+                    display: block !important;
+                }}
+            }}
+            </style>
+            <img src="data:image/png;base64,{get_base64_image('dataparc_rebrand_black.png')}" class="adaptive-logo-black" alt="dataPARC">
+            <img src="data:image/png;base64,{get_base64_image('dataparc_rebrand_white.png')}" class="adaptive-logo-white" alt="dataPARC">
+        """, unsafe_allow_html=True)
     with col2:
         st.title("Expressions Assistant")
         st.markdown("**Powered by AI - Industrial Analytics Intelligence**")
