@@ -1,14 +1,11 @@
 ============================================================
 dataPARC Expressions - Complete Reference Manual
 ============================================================
-
 VERSION: Comprehensive Edition (Merged)
 PURPOSE: Complete reference for dataPARC expression syntax, functions, and patterns
-
 ============================================================
 TABLE OF CONTENTS
 ============================================================
-
 1. Overview
 2. Syntax Basics
 3. Tag Value Access Functions
@@ -23,11 +20,9 @@ TABLE OF CONTENTS
 12. Script Editor Usage
 13. Complete Function Reference
 14. Integration Notes
-
 ============================================================
 1. OVERVIEW
 ============================================================
-
 dataPARC expressions are used in:
 - PARCview displays
 - Trends
@@ -113,6 +108,7 @@ UNARY:
 - String
 - Boolean (1 = true, 0 = false)
 - Datetime (timestamps)
+- Digital tags (array 1x2 of numeric value and corresponding text value
 
 
 2.5 Timestamps
@@ -135,6 +131,48 @@ Follows standard VB rules:
 4. Addition, Subtraction
 5. Comparison operators
 6. Boolean operators (AND, OR)
+
+2.7 Digital Tags
+------------------------------------------------------------
+Digital tags are a special tag type in dataPARC that return a 1x2 array containing BOTH a numeric value and a text string.
+
+STRUCTURE:
+Digital Tag Output = [numeric_value, "text_value"]
+
+Example:
+IV(Pump.Status) might return: [1, "Running"] or [0, "Stopped"]
+
+Apply the /digital=numeric switch to extract only the numeric part of the array.
+
+	SYNTAX:
+	TagName/digital=numeric
+
+	USAGE:
+	Can be used as a standalone tag reference
+	Cannot be nested inside IV() in expressions
+
+	EXAMPLE (Valid):
+	VAN.PI.PumpMode/digital=numeric  // Used as standalone tag in trend
+
+	EXAMPLE (Invalid):
+	Tag/EXPR=IV("VAN.PI.PumpMode/digital=numeric")  // DOES NOT WORK IN TREND, BUT WORKS IN SCRIPT EDITOR
+
+Apply the /digital=text switch to extract only the text part of the array.
+
+	SYNTAX:
+	TagName/digital=text
+
+	USAGE:
+	Can be used as a standalone tag reference
+	Cannot be nested inside IV() in expressions in trends, but can in Script Editor
+	Used with text comparison formulas for conditional logic
+
+	EXAMPLE (Valid):
+	VAN.PI.PumpMode/digital=text  // Used as standalone tag in trend
+
+	EXAMPLE (Invalid):
+	Tag/EXPR=IV("VAN.PI.PumpMode/digital=text")  // DOES NOT WORK IN TREND, BUT WORKS IN SCRIPT EDITOR
+
 
 ============================================================
 3. TAG VALUE ACCESS FUNCTIONS
@@ -177,6 +215,8 @@ IMPORTANT:
 Tags referenced inside IV() may include tag switches:
 IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600, 0, 0)")
 
+Tags with digital switches inside IV expressions return value in Script Editor, but not in Trend. Save them as calced tag to see values in Trend:
+IV("VAN.IP21.291FT6025/Digital=Numeric")
 
 3.3 C.IV("TagName", timestamp)
 ------------------------------------------------------------
@@ -233,13 +273,14 @@ EXAMPLE:
 C.ReadPVAtTime("VAN.PHD.Flow", IV.Timestamp, TimeSpan.Parse("00:10:00"))
 
 
-3.6 C.ReadPVTotal("TagName", startTime, endTime)
+3.6 C.ReadPVTotal("TagName", startTime, endTime), C.ReadPVMinimum("TagName", startTime, endTime), C.ReadPVMaximum("TagName", startTime, endTime)
 ------------------------------------------------------------
-Returns totalized (integrated) value over a period.
-Used for flow totals, energy calculations, etc.
+Returns aggergate (totalized (integrated), minimum or maximum) value over a period.
 
 SIGNATURE:
 C.ReadPVTotal(tagName, startTime, endTime)
+C.ReadPVMinimum("TagName", startTime, endTime)
+C.ReadPVMaximum("TagName", startTime, endTime)
 
 ARGUMENTS:
 tagName (string): fully qualified tag name
@@ -247,7 +288,7 @@ startTime (datetime): period start
 endTime (datetime): period end
 
 RETURN:
-Numeric total (integrated value)
+Numeric aggregated value
 
 EXAMPLE:
 C.ReadPVTotal("VAN.PHD.Flow1", IV.Timestamp - TimeSpan.Parse("08:00:00"), IV.Timestamp)
@@ -530,6 +571,60 @@ EXAMPLES:
 (valueA * 2 + valueB) / (2 + 1)
 IV * 1.8 + 32  // Celsius to Fahrenheit
 
+7.3 Building Conditions with Digital Tags
+------------------------------------------------------------
+NUMERIC CONDITIONS:
+Use C.StateNo() inside expressions:
+	VAN.PI.Tag/EXPR=C.IIF(C.StateNo(IV("VAN.PI.Status")) = 1, "Active", "Inactive")
+
+Or use /digital=numeric as a switch to an input tag for an advanced formula for comparison.
+
+TEXT CONDITIONS:
+Cannot use direct text comparison in expressions.
+Must use /digital=text switch as a switch to an input tag for an advanced formula for comparison.
+
+7.3.1 Critical Limitations
+
+WHAT WORKS:
+✅ C.StateNo(IV("DigitalTag")) in expressions
+✅ DigitalTag/digital=numeric as a switch to an input tag for an advanced formula for comparison.
+✅ DigitalTag/digital=text as a switch to an input tag for an advanced formula for comparison.
+✅ Using /digital switches with advanced formulas
+
+WHAT DOES NOT WORK:
+❌ IV("Tag/digital=numeric") inside expressions
+❌ IV("Tag/digital=text") inside expressions
+❌ Direct text comparison of digital tags in /EXPR=
+❌ Nesting /digital switches inside IV()
+
+REASON:
+The /digital switch operates at the tag reference level, not at the expression evaluation level. It cannot be nested within IV() function calls.
+
+7.3.2 Recommended Patterns
+------------------------------------------------------------
+
+PATTERN 1: Numeric State Logic
+Use C.StateNo() for all conditional logic based on digital tag states:
+
+Tag/EXPR=C.IIF(C.StateNo(IV("Mode.Tag")) = 1, 
+    IV("Flow.Rate"), 
+    0)
+
+PATTERN 2: Formula-Based Conditions (Two-Step Process Recommended but works also with saving a Resulting Calc Tag)
+In the function library the functions might exist that compare tag value to a numeric or text value.
+- Condition_Comparison_to_numeric_value
+- Condition_Comparison_to_text_value
+These functions accept digital tag with a digitl switch as an argument
+
+Therefore, expressions like that can be built and will work as a saved tag, but importantly will not work if drag and dropped directly in trend!!!
+
+Examples:
+TagName/EXPR=IV("TagName/CALC=Condition_Comparison_to_numeric_value(TagName/digital-numeric,100")
+>>Pay attention that tag name in formula argument does not require quotes in this case (for unknown reason, seems an exception)
+
+TagName/EXPR=C.IIF(IV("TagName/CALC=Condition_Comparison_to_numeric_value(TagName/digital-numeric,100")>10,1,0)
+
+
 ============================================================
 8. MATH FUNCTIONS (.NET MATH LIBRARY)
 ============================================================
@@ -612,7 +707,6 @@ dataPARC tags support multiple switches:
 
 /EXPR=     Expression calculation
 /CALC=     dataPARC library function
-/FILTER=   Special filtering
 /PLOT=     Display options
 
 IMPORTANT:
@@ -627,7 +721,6 @@ Tags referenced inside IV("...") may themselves contain:
 
 - /EXPR= (another expression)
 - /CALC= (dataPARC library function)
-- /FILTER= (filter operations)
 
 EXAMPLE:
 VAN.Sample.1-Sine/EXPR=IV + IV("VAN.IP21.291FT6025/CALC=LowPassFilter(600,0,0)")
@@ -641,18 +734,13 @@ This means:
 
 9.3 dataPARC Library Functions (/CALC=)
 ------------------------------------------------------------
-Common library functions used in tag switches:
+Functions are pre-saved transformations with strictly defined syntaxis, arguments and their types.
+Output can be only of double or string type and is a single value.
+Syntaxis is Location.Source.TagName/CALC=Function_Name(Argument, Argument, ...)
 
-FILTERS:
-LowPassFilter(timeConstant, min, max)
-HighPassFilter(...)
-RunningAverage(...)
+On every customer installation functions available may be different.
 
-DERIVATIVES:
-Derivative(...)
-
-CUSTOM:
-Mill-specific custom functions
+It is usefule to refer to the library of exisiting functions to offer a solution for the problem, but it cannot be taken for granted that they necessarily exist in customer library.
 
 EXAMPLE:
 IV("Area.Flow1/CALC=LowPassFilter(600, 0, 0)")
@@ -772,7 +860,7 @@ Mode-based calculation:
 C.IIF(C.StateNo(IV("Pump.Status")) = 1, IV("Flow.Rate"), 0)
 
 
-11.4 Totalizers with Formatting
+11.4 Aggregates with Formatting
 ------------------------------------------------------------
 8-hour shift total:
 C.Concat("Flow = ",
@@ -786,6 +874,11 @@ C.ReadPVTotal("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestam
 Formatted daily total:
 C.Format(C.ReadPVTotal("Flow", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp), "%0.2f")
 
+Similar for other types of aggregates: minimium over time and maximum over time
+
+Daily total:
+C.ReadPVMinimum("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp)Daily total:
+C.ReadPVMaximum("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestamp)
 
 11.5 Time-Based Logic
 ------------------------------------------------------------
@@ -853,8 +946,6 @@ Expressions can be entered in:
 1. Script Editor (for calculated tags)
 2. PARCview displays (using /EXPR= switch)
 3. Trend directly (paste tag with /EXPR=)
-4. Dashboard calculations
-
 
 12.2 Script Editor Features
 ------------------------------------------------------------
@@ -906,6 +997,8 @@ HISTORIAN ACCESS:
 C.ReadPVAtTime(tag, timestamp)
 C.ReadPVAtTime(tag, timestamp, searchback)
 C.ReadPVTotal(tag, startTime, endTime)
+C.ReadPVMiniumum(tag, startTime, endTime)
+C.ReadPV
 C.IV(tag, timestamp)
 IV
 IV("TagName")
@@ -992,13 +1085,3 @@ tagval('tag1','*-8h')
 
 AFTER (dataPARC):
 C.ReadPVAtTime("Location.Source.tag1", IV.Timestamp - TimeSpan.Parse("08:00:00"))
-
-============================================================
-END OF COMPLETE REFERENCE MANUAL
-============================================================
-
-Document Version: 1.0 Merged
-Last Updated: 2024
-Status: Production Ready
-
-For additional support, contact dataPARC technical support.
