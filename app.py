@@ -88,7 +88,7 @@ st.set_page_config(
     page_title="dataPARC Expressions Assistant",
     page_icon="dataparc_rebrand_black.png",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # CSS styling
@@ -213,10 +213,27 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    /* Feedback button styling */
+    /* Feedback button styling - Extra prominent */
+    div[data-testid="stSidebar"] button[key="feedback_button"] {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
+        color: white !important;
+        border: 2px solid #FF8E53 !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+    }
+    
+    div[data-testid="stSidebar"] button[key="feedback_button"]:hover {
+        background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
+        border: 2px solid #FFA07A !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* Alternative selector for feedback button */
     .feedback-button button {
         background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
         color: white !important;
+        border: 2px solid #FF8E53 !important;
     }
     
     .feedback-button button:hover {
@@ -483,12 +500,23 @@ with st.sidebar:
     
     st.divider()
     
-    # Feedback button
-    st.markdown('<div class="feedback-button">', unsafe_allow_html=True)
-    if st.button("📝 Send Feedback", use_container_width=True, key="feedback_button"):
+    # Feedback button - Orange and prominent
+    if st.button("📝 Send Feedback", use_container_width=True, key="feedback_button", type="primary"):
         st.session_state.show_feedback = True
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+        <style>
+        /* Force orange color on feedback button */
+        button[kind="primary"] {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
+            border-color: #FF8E53 !important;
+        }
+        button[kind="primary"]:hover {
+            background: linear-gradient(135deg, #FF8E53 0%, #FFA07A 100%) !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     st.divider()
     
