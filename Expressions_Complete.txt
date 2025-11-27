@@ -303,63 +303,27 @@ C.ReadPVTotal("Flow.Tag", IV.Timestamp - TimeSpan.Parse("24:00:00"), IV.Timestam
 All date/time functions accept a datetime argument.
 Commonly used with IV.Timestamp.
 
-4.1 C.DatePart_Second(timestamp)
-------------------------------------------------------------
-Returns integer seconds (0-59).
+Works for seconds, milliseconds, minutes, hours, days, months, years
 
-EXAMPLE:
-C.DatePart_Second(IV.Timestamp)
+Examples:
+IV.Timestamp.Second
+IV.Timestamp.Minute
+IV.Timestamp.Hour
+IV.Timestamp.Day
+IV.Timestamp.Month
+IV.Timestamp.Year
+IV.Timestamp.DayofWeek
+IV.Timestamp.DayofYear
 
+4.1 Retrieveing the time variables and manilulating timestamps
+-----------------------------------------------------------
+Adding any time intervals works also with IV.Timestamp, e.g..
+IV.Timestamp.AddMinutes(1) 0 returns a changed timestamp
 
-4.2 C.DatePart_Minute(timestamp)
-------------------------------------------------------------
-Returns integer minutes (0-59).
+To retrieve the number you can combine functions, e.g.
+IV.Timestamp.AddMinutes(1).Minute
 
-EXAMPLE:
-C.DatePart_Minute(IV.Timestamp)
-
-
-4.3 C.DatePart_Hour(timestamp)
-------------------------------------------------------------
-Returns integer hours (0-23).
-
-EXAMPLE:
-C.DatePart_Hour(IV.Timestamp)
-
-
-4.4 C.DatePart_Day(timestamp)
-------------------------------------------------------------
-Returns day of month (1-31).
-
-EXAMPLE:
-C.DatePart_Day(IV.Timestamp)
-
-
-4.5 C.DatePart_Month(timestamp)
-------------------------------------------------------------
-Returns month (1-12).
-
-EXAMPLE:
-C.DatePart_Month(IV.Timestamp)
-
-
-4.6 C.DatePart_Weekday(timestamp)
-------------------------------------------------------------
-Returns weekday number.
-
-EXAMPLE:
-C.DatePart_Weekday(IV.Timestamp)
-
-
-4.7 C.DatePart_Year(timestamp)
-------------------------------------------------------------
-Returns year (4-digit integer).
-
-EXAMPLE:
-C.DatePart_Year(IV.Timestamp)
-
-
-4.8 TimeSpan.Parse("hh:mm:ss")
+4.2 TimeSpan.Parse("hh:mm:ss")
 ------------------------------------------------------------
 A .NET time-parsing function supported by the engine.
 Returns a TimeSpan object for time calculations.
