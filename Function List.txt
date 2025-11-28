@@ -52,21 +52,16 @@ Function Name: Conditions_Event_Around_Start_End
 
 Example:
 VAN.IP21.SomeSignal/CALC = Conditions_Event_Around_Start_End("Around_Start", 5, 10)
-or
-VAN.IP21.SomeSignal/CALC = Conditions_Event_Around_Start_End("Around_End", 15, 5)
 
 	Script Purpose
 
-	This script processes a binary 0/1 signal and creates new artificial events around either the start or end of each real signal event.
+	This script processes a binary 1/0 signal and creates new artificial events around either the start or end of each real signal event.
 	The output consists of a 1 at the beginning of the generated event window and a 0 at its end, shifted by user-defined offsets.
+	This function is not applicable if both start and end time of the original events should be moved, for that use Conditions_Move_Event_Start_End function
 
 	Input Arguments
 
-		Around_Type (String)
-			Determines whether to generate the artificial event around the start or around the end of each real signal.
-			Accepted values:
-			"Around_Start"
-			"Around_End"
+		Around_Type (String): accepted values are "Around_Start" or	"Around_End"
 
 		Before_event (Double)
 			Number of minutes before the real event time (start or end) where the artificial event should begin.
@@ -75,23 +70,15 @@ VAN.IP21.SomeSignal/CALC = Conditions_Event_Around_Start_End("Around_End", 15, 5
 			Number of minutes after the real event time (start or end) where the artificial event should end.
 
 	What the Script Does
-
 		Reads the raw 0/1 signal from the input tag across the calculation period.
-		Detects each signal event:
-		Start = transition from 0 → 1
-		End = transition from 1 → 0
 		For each completed real event:
 		If Around_Type = "Around_Start":
-		Creates a new event starting Before_event minutes before the real signal start.
-		Ends the event After_event minutes after the real signal start.
+			Creates a new event starting Before_event minutes before the real signal start.
+			Ends the event After_event minutes after the real signal start.
 		If Around_Type = "Around_End":
-		Creates a new event starting Before_event minutes before the real signal end.
-		Ends the event After_event minutes after the real signal end.
-		Writes two output points for each generated artificial event:
-			1 at the adjusted event start time
-			0 at the adjusted event end time
-		Does not stretch or modify the original signal—only generates new, shifted event windows.
-		
+			Creates a new event starting Before_event minutes before the real signal end.
+			Ends the event After_event minutes after the real signal end.
+
 ________________________________________________________________
 
 Function Name: Conditions_RemoveSignals_Longer_Shorter_Than
