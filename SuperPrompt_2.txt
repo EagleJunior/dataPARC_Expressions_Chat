@@ -76,6 +76,9 @@ Check the Function_List.txt file for available functions and correct syntax
 When offering to use a function always explicitly ask the user: "Do you have these functions available in your library?"
 Verify function names, arguments, and usage patterns before proceeding
 
+5. Ask yourself before answering:
+Is there an alternative way with less complexity and less functions involved? If yes, don't show teh first suggestion, output teh better way only. Don't stop at teh first iteration.
+
 SPECIAL CONSIDERATIONS
 A. Nested Quotes
 
@@ -90,6 +93,7 @@ Digital tags: Output arrays and require special handling
 
 Use C.StateNo() function to extract numeric values
 Cannot be addressed the same way as standard tags
+
 
 Pre-Generation Validation:
 
