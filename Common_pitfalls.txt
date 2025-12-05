@@ -105,4 +105,6 @@ C.IIF(cond, CDbl(IV), IV.Timestamp)
 Recommended:
 • For numeric:   CDbl(IV)
 • For string:    CChar(IV)
-• For NULL:      C.IIF(cond, CDbl(IV), NULL)
+• For NULL (filtering):         C.IIF(cond, CDbl(IV), 0/0) in case of numeric IV and 
+                                C.IIF(cond, Cchar(IV), "") in case of text IV 
+
