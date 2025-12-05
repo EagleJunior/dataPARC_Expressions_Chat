@@ -1,11 +1,14 @@
 ============================================================
 dataPARC Expressions - Complete Reference Manual
 ============================================================
+
 VERSION: Comprehensive Edition (Merged)
 PURPOSE: Complete reference for dataPARC expression syntax, functions, and patterns
+
 ============================================================
 TABLE OF CONTENTS
 ============================================================
+
 1. Overview
 2. Syntax Basics
 3. Tag Value Access Functions
@@ -20,9 +23,11 @@ TABLE OF CONTENTS
 12. Script Editor Usage
 13. Complete Function Reference
 14. Integration Notes
+
 ============================================================
 1. OVERVIEW
 ============================================================
+
 dataPARC expressions are used in:
 - PARCview displays
 - Trends
@@ -121,8 +126,25 @@ Two main timestamp sources:
 2. Explicit timestamps
    Passed to functions like C.ReadPVAtTime() or C.IV()
 
+2.6 Data Quality
+------------------------------------------------------------
+Every tag value in dataPARC comes with an associated OPC DA quality state.
+Quality determines whether the returned value is valid for use.
 
-2.6 Order of Operations
+Quality is accessed through:
+
+IV.Quality
+
+This returns an Opc.Da.Quality object.
+
+Supported quality constants:
+
+Opc.Da.Quality.Good
+Opc.Da.Quality.Bad
+
+Example: C.IIF(IV.Quality = Opc.Da.Quality.Good, <use value>, <fallback>)
+
+2.7 Order of Operations
 ------------------------------------------------------------
 Follows standard VB rules:
 1. Parentheses
@@ -132,7 +154,7 @@ Follows standard VB rules:
 5. Comparison operators
 6. Boolean operators (AND, OR)
 
-2.7 Digital Tags
+2.8 Digital Tags
 ------------------------------------------------------------
 Digital tags are a special tag type in dataPARC that return a 1x2 array containing BOTH a numeric value and a text string.
 
@@ -315,13 +337,14 @@ IV.Timestamp.Year
 IV.Timestamp.DayofWeek
 IV.Timestamp.DayofYear
 
-4.1 Retrieveing the time variables and manilulating timestamps
------------------------------------------------------------
+4.1
+
 Adding any time intervals works also with IV.Timestamp, e.g..
 IV.Timestamp.AddMinutes(1) 0 returns a changed timestamp
 
 To retrieve the number you can combine functions, e.g.
 IV.Timestamp.AddMinutes(1).Minute
+
 
 4.2 TimeSpan.Parse("hh:mm:ss")
 ------------------------------------------------------------
