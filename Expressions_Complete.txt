@@ -398,6 +398,14 @@ ALTERNATIVE VB SYNTAX:
 IIF(IV > 5, 1, 0)
 Both C.IIF and IIF are supported.
 
+! Importantly, IIF outputs must be the same type !
+e.g. C.IIF(condition, IV, 0) will fail, as IV is not a double type by default
+e.g. C.IIF(condition, CDbl(IV), 0) will work, if IV contains a numeric value
+e.g. C.IIF(IV>100.0,cchar(IV),"Text") will work
+
+When returning numeric values, always convert tag values with CDbl() to ensure consistent Double output.
+Integers such as 0 or 5 are automatically promoted to Double when the other branch is Double.
+e.g. C.IIF(condition, CDbl(IV), 0) works
 
 5.2 C.InRange(value, min, max)
 ------------------------------------------------------------
