@@ -76,3 +76,33 @@ For any digital tag logic that needs to work in Trends:
 1. ALWAYS use C.StateNo(IV("DigitalTag")), if the mapping between desired text and numeric value is known
 OR if /digital switch is required:
 -- Suggest Option 2 or Option 3. Option 3 packs everything into one expression that needs to be saved to work in trends. Option 2 requires 2 steps and also requires saving a calced tag first, but offers an intermediate result for additional checks.
+
+________
+
+4. C.IIF Type Mismatch
+============================================================
+Example (INVALID):
+C.IIF(cond, IV, 0)
+C.IIF(conf, IV, "text")
+
+Problem:
+IV is dynamically typed, not Double not Text.
+When true/false outputs have different types → evaluation fails.
+
+Quick Rule:
+If numeric output → always convert tag values:
+C.IIF(cond, CDbl(IV), 0)
+
+✓ Works:
+C.IIF(cond, CDbl(IV), 0)
+C.IIF(cond, CChar(IV), 0)
+
+✕ Fails:
+C.IIF(cond, IV, 0)
+C.IIF(cond, CDbl(IV), "0")
+C.IIF(cond, CDbl(IV), IV.Timestamp)
+
+Recommended:
+• For numeric:   CDbl(IV)
+• For string:    CChar(IV)
+• For NULL:      C.IIF(cond, CDbl(IV), NULL)
